@@ -2,6 +2,7 @@
 # vim: set et sw=4 sts=4:
 
 import os
+import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 from utils import description, get_version
