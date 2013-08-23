@@ -48,7 +48,7 @@ CLASSIFIERS = [
 
 ENTRY_POINTS = {
     'console_scripts': [
-        'picroscopy = picroscopy:main',
+        'picroscopy = picroscopy.terminal:main',
         ],
     }
 
