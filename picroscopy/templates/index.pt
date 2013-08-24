@@ -1,9 +1,4 @@
-<html>
-  <head>
-    <title>Picroscopy</title>
-  </head>
-  <body>
-    <h1>Picroscopy</h1>
-    <p>Images taken so far:</p>
-  </body>
-</html>
+<div metal:use-macro="layout['layout']" tal:define="title 'Images'">
+  <div metal:fill-slot="content">
+  </div>
+</div>
