@@ -26,6 +26,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 class PicroscopyConsoleApp(object):
     def __init__(self):
+        super().__init__()
         self.parser = argparse.ArgumentParser(
             description=__doc__,
         )
@@ -38,7 +39,7 @@ class PicroscopyConsoleApp(object):
             '-v', '--verbose', dest='log_level', action='store_const',
             const=logging.INFO, help='produce more console output')
         self.parser.add_argument(
-            '-l', '--log-file', dest='log_file',
+            '-l', '--log-file', dest='log_file', metavar='FILE',
             help='log messages to the specified file')
         self.parser.add_argument(
             '-d', '--daemon', dest='daemon', action='store_const', const=True,
@@ -47,21 +48,25 @@ class PicroscopyConsoleApp(object):
             '-p', '--port', dest='port', action='store',
             help='the port the web-server will listen on. Default: %(default)s')
         self.parser.add_argument(
-            '-a', '--address', dest='address', action='store',
+            '-a', '--address', dest='address', action='store', metavar='HOST',
             help='the address of the interface the web-server will listen on. '
             'Specify 0.0.0.0 to listen on all interfaces. Default: %(default)s')
         self.parser.add_argument(
-            '-S', '--static-dir', dest='static_dir', action='store',
-            help='the directory from which to read static files for the '
-            'website. Default: %(default)s')
+            '--images-dir', dest='images_dir', action='store',
+            metavar='DIR', help='the directory in which to store images '
+            'taken with the camera. Default: %(default)s')
         self.parser.add_argument(
-            '-T', '--templates_dir', dest='templates_dir', action='store',
-            help='the directory from which to read template files for the '
-            'website. Default: %(default)s')
+            '--thumbnails-dir', dest='thumbs_dir', action='store',
+            metavar='DIR', help='the directory in which to store thumbnail '
+            'images taken by the website. Default: %(default)s')
         self.parser.add_argument(
-            '-I', '--images-dir', dest='images_dir', action='store',
-            help='the directory in which to store images taken with the '
-            'camera. Default: %(default)s')
+            '--templates-dir', dest='templates_dir', action='store',
+            metavar='DIR', help='the directory from which to read the '
+            'website templates. Default: %(default)s')
+        self.parser.add_argument(
+            '--static-dir', dest='static_dir', action='store', metavar='DIR',
+            help='the directory from which to read the static website files. '
+            'Default: %(default)s')
         self.parser.add_argument(
             '-P', '--pdb', dest='debug', action='store_true',
             help='run under PDB (debug mode)')
@@ -72,9 +77,10 @@ class PicroscopyConsoleApp(object):
             daemon=False,
             address='127.0.0.1',
             port=8000,
-            static_dir=os.path.join(HERE, 'static'),
+            thumbs_dir=os.path.join(HERE, 'data', 'thumbs'),
+            images_dir=os.path.join(HERE, 'data', 'images'),
             templates_dir=os.path.join(HERE, 'templates'),
-            images_dir=os.path.join(HERE, 'images'),
+            static_dir=os.path.join(HERE, 'static'),
             )
 
     def __call__(self, args=None):
@@ -93,25 +99,29 @@ class PicroscopyConsoleApp(object):
         else:
             logging.getLogger().setLevel(logging.INFO)
         if args.debug:
-            import pdb
-            return pdb.runcall(self.main, args)
+            import pudb
+            return pudb.runcall(self.main, args)
         else:
-            return self.main(args) or 0
+            try:
+                return self.main(args) or 0
+            except Exception as e:
+                logging.error(str(e))
+                return 1
 
     def main(self, args):
-        try:
-            app = PicroscopyWsgiApp(
-                args.images_dir,
-                args.static_dir,
-                args.templates_dir
+        httpd = make_server(
+            args.address, args.port,
+            PicroscopyWsgiApp(
+                args.images_dir, args.thumbs_dir,
+                args.static_dir, args.templates_dir
                 )
-            httpd = make_server(args.address, args.port, app)
+            )
+        try:
             logging.info('Serving on http://%s:%s' % (args.address, args.port))
             httpd.serve_forever()
-            return 0
-        except Exception as e:
-            logging.error(str(e))
-            return 1
+        finally:
+            httpd.application.camera.close()
+        return 0
 
 
 main = PicroscopyConsoleApp()

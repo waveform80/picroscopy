@@ -1,4 +1,39 @@
 <div metal:use-macro="layout['layout']" tal:define="title 'Images'">
-  <div metal:fill-slot="content">
+  <div metal:fill-slot="content" tal:omit-tag="">
+
+    <div class="row">
+      <div class="small-12 columns">
+        <ul class="button-group radius">
+          <li><a class="button" href="#">Take Image</a></li>
+          <li><a class="button" href="#">Download</a></li>
+          <li><a class="button" href="#">Send</a></li>
+          <li><a class="button" href="#">Clear</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="small-12 columns">
+        <ul class="small-block-grid-2 large-block-grid-4">
+          <li tal:repeat="image camera">
+          <a href="${image_url(image)}">
+            <img src="${thumb_url(image)}" />
+          </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="small-12 columns">
+        <ul class="button-group radius">
+          <li><a class="button" href="#">Take Image</a></li>
+          <li><a class="button" href="#">Download</a></li>
+          <li><a class="button" href="#">Send</a></li>
+          <li><a class="button" href="#">Clear</a></li>
+        </ul>
+      </div>
+    </div>
+
   </div>
 </div>
