@@ -48,8 +48,10 @@ class PicroscopyWsgiApp(object):
         req = Request(environ)
         try:
             handler, kwargs = self.router.match(req.path_info)
-            del kwargs['route_name']
             if handler:
+                # XXX Why does route_name only appear in kwargs sometimes?!
+                if 'route_name' in kwargs:
+                    del kwargs['route_name']
                 resp = handler(req, **kwargs)
             else:
                 self.not_found(req)
@@ -63,16 +65,18 @@ class PicroscopyWsgiApp(object):
             'The resource at %s could not be found' % req.path_info)
 
     def do_capture(self, req):
-        pass
+        self.camera.capture()
+        raise exc.HTTPSeeOther(location=self.router.path_for('home'))
 
     def do_download(self, req):
-        pass
+        raise exc.HTTPSeeOther(location=self.router.path_for('home'))
 
     def do_send(self, req):
-        pass
+        raise exc.HTTPSeeOther(location=self.router.path_for('home'))
 
     def do_clear(self, req):
-        pass
+        self.camera.clear()
+        raise exc.HTTPSeeOther(location=self.router.path_for('home'))
 
     def do_image(self, req, image):
         """

@@ -3,35 +3,9 @@ import io
 import logging
 import threading
 import subprocess
-import itertools
+import datetime
 
 from PIL import Image
-
-
-# GStreamer pipeline for video preview
-VIDEO_PREVIEW = [
-    'v4l2src',
-    'video/x-raw-yuv,width=640,height=480',
-    'ffmpegcolorspace',
-    'xvimagesink',
-    ]
-
-# GStreamer pipeline for image capture
-IMAGE_CAPTURE = [
-    'v4l2src num-buffers=1',
-    'video/x-raw-yuv,width=640,height=480',
-    'ffmpegcolorspace',
-    'jpegenc',
-    'filesink location=test.jpg',
-    ]
-
-def launch_gst(pipeline):
-    cmdline = ['gst-launch-0.10'] + [
-        param
-        for elem in zip(pipeline, itertools.cycle('!'))
-        for param in elem
-        ][:-1]
-    return subprocess.Popen(cmdline)
 
 
 class PicroscopyCamera(object):
@@ -55,27 +29,34 @@ class PicroscopyCamera(object):
         return sum(
             1 for f in os.listdir(self.images_dir)
             if f.endswith('.jpg')
-            and os.path.isfile(os.path.join(self.images_dir, f))
+            and os.path.exists(os.path.join(self.images_dir, f))
             )
 
     def __iter__(self):
-        for f in os.listdir(self.images_dir):
+        for f in sorted(os.listdir(self.images_dir)):
             if (
                     f.endswith('.jpg') and
-                    os.path.isfile(os.path.join(self.images_dir, f))
+                    os.path.exists(os.path.join(self.images_dir, f))
                     ):
                 yield f
 
     def __contains__(self, value):
         return (
             value.endswith('.jpg') and
-            os.path.isfile(os.path.join(self.images_dir, value))
+            os.path.exists(os.path.join(self.images_dir, value))
             )
 
     def _start_preview(self):
         if self.video_process:
             raise ValueError('Video preview already started')
-        self.video_process = launch_gst(VIDEO_PREVIEW)
+        cmdline = [
+            'gst-launch-0.10',
+            'v4l2src',                              '!',
+            'video/x-raw-yuv,width=320,height=240', '!',
+            'ffmpegcolorspace',                     '!',
+            'xvimagesink',
+            ]
+        self.video_process = subprocess.Popen(cmdline)
 
     def _stop_preview(self):
         if self.video_process:
@@ -84,18 +65,33 @@ class PicroscopyCamera(object):
             self.video_process = None
 
     def capture(self):
-        with self.capture_lock.acquire():
+        with self.capture_lock:
             self._stop_preview()
             try:
-                capture_process = launch_gst(IMAGE_CAPTURE)
+                image_filename = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S.jpg')
+                image_filename = os.path.join(self.images_dir, image_filename)
+                cmdline = [
+                    'gst-launch-0.10',
+                    'v4l2src', 'num-buffers=1',             '!',
+                    'video/x-raw-yuv,width=640,height=480', '!',
+                    'ffmpegcolorspace',                     '!',
+                    'jpegenc',                              '!',
+                    'filesink', 'location=%s' % image_filename,
+                    ]
+                print(repr(cmdline))
+                capture_process = subprocess.Popen(cmdline)
                 capture_process.communicate()
             finally:
                 self._start_preview()
 
     def clear(self):
         for f in os.listdir(self.images_dir):
-            if f.endswith('.jpg') and os.path.isfile(f):
-                os.unlink(os.path.join(self.images_dir, f))
+            image = os.path.join(self.images_dir, f)
+            thumb = os.path.join(self.thumbs_dir, f)
+            if f.endswith('.jpg') and os.path.exists(image):
+                os.unlink(image)
+                if os.path.exists(thumb):
+                    os.unlink(thumb)
 
     def open_image(self, image):
         if not image in self:
