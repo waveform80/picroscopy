@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width">
   <title>Picroscopy - ${title}</title>
   <link rel="stylesheet" href="/static/foundation/css/foundation.css">
+  <link rel="stylesheet" href="/static/picroscopy.css">
   <script src="/static/foundation/js/vendor/custom.modernizr.js"></script>
 </head>
 <body>

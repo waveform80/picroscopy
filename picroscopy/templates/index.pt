@@ -15,10 +15,13 @@
     <div class="row">
       <div class="small-12 columns">
         <p tal:condition="not camera">There are no images to display.</p>
-        <ul class="small-block-grid-2 large-block-grid-4" tal:condition="camera">
+        <p tal:condition="camera">${len(camera)} image(s) stored.</p>
+        <ul class="gallery small-block-grid-2 large-block-grid-4" tal:condition="camera">
           <li tal:repeat="image camera">
           <a href="${router.path_for('image', image=image)}">
             <img src="${router.path_for('thumb', image=image)}" />
+            <br />
+            ${image}
           </a>
           </li>
         </ul>
