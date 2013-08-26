@@ -36,7 +36,7 @@ class PicroscopyWsgiApp(object):
             url('/',                   self.do_template, kwargs={'page': 'index'}, name='home'),
             url('/{page}.html',        self.do_template, name='template'),
             url('/capture',            self.do_capture,  name='capture'),
-            url('/images.zip',         self.do_download, name='download'),
+            url('/download',           self.do_download, name='download'),
             url('/send',               self.do_send,     name='send'),
             url('/clear',              self.do_clear,    name='clear'),
             url('/static/{path:any}',  self.do_static,   name='static'),
@@ -66,17 +66,25 @@ class PicroscopyWsgiApp(object):
 
     def do_capture(self, req):
         self.camera.capture()
-        raise exc.HTTPSeeOther(location=self.router.path_for('home'))
+        raise exc.HTTPFound(location=self.router.path_for('home'))
 
     def do_download(self, req):
-        raise exc.HTTPSeeOther(location=self.router.path_for('home'))
+        archive = self.camera.archive()
+        size = archive.seek(0, io.SEEK_END)
+        archive.seek(0)
+        resp = Response()
+        resp.content_type = 'application/zip'
+        resp.content_length = size
+        resp.content_disposition = 'attachment; filename=images.zip'
+        resp.app_iter = FileWrapper(archive)
+        return resp
 
     def do_send(self, req):
-        raise exc.HTTPSeeOther(location=self.router.path_for('home'))
+        raise exc.HTTPFound(location=self.router.path_for('home'))
 
     def do_clear(self, req):
         self.camera.clear()
-        raise exc.HTTPSeeOther(location=self.router.path_for('home'))
+        raise exc.HTTPFound(location=self.router.path_for('home'))
 
     def do_image(self, req, image):
         """
@@ -84,9 +92,10 @@ class PicroscopyWsgiApp(object):
         """
         if not image in self.camera:
             self.not_found(req)
+        stat, f = self.camera.open_image(image)
         resp = Response()
         resp.content_type = 'image/jpeg'
-        resp.content_length, f = self.camera.open_image(image)
+        resp.content_length = stat.st_size
         resp.app_iter = FileWrapper(f)
         return resp
 
@@ -96,9 +105,10 @@ class PicroscopyWsgiApp(object):
         """
         if not image in self.camera:
             self.not_found(req)
+        stat, f = self.camera.open_thumbnail(image)
         resp = Response()
         resp.content_type = 'image/jpeg'
-        resp.content_length, f = self.camera.open_thumbnail(image)
+        resp.content_length = stat.st_size
         resp.app_iter = FileWrapper(f)
         return resp
 

@@ -4,6 +4,8 @@ import logging
 import threading
 import subprocess
 import datetime
+import tempfile
+import zipfile
 
 from PIL import Image
 
@@ -93,11 +95,20 @@ class PicroscopyCamera(object):
                 if os.path.exists(thumb):
                     os.unlink(thumb)
 
+    def archive(self):
+        data = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)
+        # DEFLATE is basically ineffective with JPEGs, so use STORED
+        with zipfile.ZipFile(data, 'w', compression=zipfile.ZIP_STORED) as archive:
+            for f in self:
+                archive.write(os.path.join(self.images_dir, f), f)
+        data.seek(0)
+        return data
+
     def open_image(self, image):
         if not image in self:
             raise ValueError('Invalid image %s' % image)
         image = os.path.join(self.images_dir, image)
-        return os.stat(image).st_mtime, io.open(image, 'rb')
+        return os.stat(image), io.open(image, 'rb')
 
     def open_thumbnail(self, image):
         if not image in self:
@@ -109,7 +120,7 @@ class PicroscopyCamera(object):
                 os.stat(thumb).st_mtime < os.stat(image).st_mtime
                 ):
             self._generate_thumbnail(image, thumb)
-        return os.stat(thumb).st_mtime, io.open(thumb, 'rb')
+        return os.stat(thumb), io.open(thumb, 'rb')
 
     def _generate_thumbnail(self, image, thumb):
         im = Image.open(image)

@@ -1,4 +1,4 @@
-<div metal:use-macro="layout['layout']" tal:define="title 'Images'">
+<div metal:use-macro="layout['layout']" tal:define="title 'Picroscopy'">
   <div metal:fill-slot="content" tal:omit-tag="">
 
     <div class="row">
