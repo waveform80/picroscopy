@@ -28,7 +28,7 @@ REQUIRES = [
     # picked up first ... yes, it's backwards ...
     'webob',
     'chameleon',
-    'routes',
+    'wheezy.routing',
     'pillow',
     ]
 

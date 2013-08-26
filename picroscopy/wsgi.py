@@ -7,7 +7,7 @@ from wsgiref.util import FileWrapper
 
 from webob import Request, Response, exc
 from chameleon import PageTemplateLoader
-from routes import Mapper
+from wheezy.routing import PathRouter, url
 
 from picroscopy.camera import PicroscopyCamera
 
@@ -21,19 +21,26 @@ class PicroscopyWsgiApp(object):
         self.templates = PageTemplateLoader(
             self.templates_dir, default_extension='.pt')
         self.layout = self.templates['layout']
-        self.mapper = Mapper()
-        self.mapper.connect('home',     '/', page='index',     handler='template')
-        self.mapper.connect('template', '/{page}.html',        handler='template')
-        self.mapper.connect('download', '/images.zip',         handler='download')
-        self.mapper.connect('send',     '/send',               handler='send')
-        self.mapper.connect('clear',    '/clear',              handler='clear')
-        self.mapper.connect('static',   '/static/{path:.*?}',  handler='static')
-        self.mapper.connect('image',    '/images/{image}.jpg', handler='image')
-        self.mapper.connect('thumb',    '/thumbs/{image}.jpg', handler='thumb')
+        self.router = PathRouter()
+        self.router.add_routes([
+            url('/',                   self.do_template, kwargs={'page': 'index'}, name='home'),
+            url('/{page}.html',        self.do_template, name='template'),
+            url('/capture',            self.do_capture,  name='capture'),
+            url('/images.zip',         self.do_download, name='download'),
+            url('/send',               self.do_send,     name='send'),
+            url('/clear',              self.do_clear,    name='clear'),
+            url('/static/{path:any}',  self.do_static,   name='static'),
+            url('/images/{image}.jpg', self.do_image,    name='image'),
+            url('/thumbs/{image}.jpg', self.do_thumb,    name='thumb')
+            ])
 
     def __call__(self, environ, start_response):
         req = Request(environ)
         try:
+            handler, kwargs = self.router.match(req.path_info)
+            del kwargs['route_name']
+            if handler:
+                resp = handler(req, **kwargs)
             else:
                 self.not_found(req)
         except exc.HTTPException as e:
@@ -45,11 +52,22 @@ class PicroscopyWsgiApp(object):
         raise exc.HTTPNotFound(
             'The resource at %s could not be found' % req.path_info)
 
-    def handle_image(self, req):
+    def do_capture(self, req):
+        pass
+
+    def do_download(self, req):
+        pass
+
+    def do_send(self, req):
+        pass
+
+    def do_clear(self, req):
+        pass
+
+    def do_image(self, req, image):
         """
         Serve an image from the camera library
         """
-        image = req.path_info.rsplit('/', 1)[1]
         if not image in self.camera:
             self.not_found(req)
         resp = Response()
@@ -58,11 +76,10 @@ class PicroscopyWsgiApp(object):
         resp.app_iter = FileWrapper(f)
         return resp
 
-    def handle_thumb(self, req):
+    def do_thumb(self, req, image):
         """
-        Serve a thumbnail of an image frmo the camera library
+        Serve a thumbnail of an image from the camera library
         """
-        image = req.path_info.rsplit('/', 1)[1]
         if not image in self.camera:
             self.not_found(req)
         resp = Response()
@@ -71,12 +88,11 @@ class PicroscopyWsgiApp(object):
         resp.app_iter = FileWrapper(f)
         return resp
 
-    def handle_static(self, req):
+    def do_static(self, req, path):
         """
         Serve static files from disk
         """
-        path = os.path.normpath(
-            os.path.join(self.static_dir, req.path_info[len('/static/'):]))
+        path = os.path.normpath(os.path.join(self.static_dir, path))
         if not path.startswith(self.static_dir):
             self.not_found(req)
         resp = Response()
@@ -88,21 +104,20 @@ class PicroscopyWsgiApp(object):
         resp.app_iter = FileWrapper(io.open(path, 'rb'))
         return resp
 
-    def handle_template(self, req):
+    def do_template(self, req, page):
         """
         Serve a Chameleon template-based page
         """
-        path = req.path_info[1:-len('.html')]
         resp = Response()
         resp.content_type = 'text/html'
         resp.content_encoding = 'utf-8'
         try:
-            template = self.templates[path]
+            template = self.templates[page]
         except ValueError:
             self.not_found(req)
         resp.text = template(
             layout=self.layout,
             camera=self.camera,
-            url=req.environ['routes.url'])
+            router=self.router)
         return resp
 
