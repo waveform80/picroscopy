@@ -35,7 +35,7 @@ def launch_gst(pipeline):
 
 
 class PicroscopyCamera(object):
-    def __init__(self, images_dir, thumbs_dir):
+    def __init__(self, images_dir, thumbs_dir, thumbs_size=(320, 320)):
         super().__init__()
         if not os.path.exists(images_dir):
             raise ValueError('The images directory %s does not exist' % images_dir)
@@ -43,6 +43,7 @@ class PicroscopyCamera(object):
             raise ValueError('The thumbnails directory %s does not exist' % thumbs_dir)
         self.images_dir = images_dir
         self.thumbs_dir = thumbs_dir
+        self.thumbs_size = tuple(thumbs_size)
         self.capture_lock = threading.Lock()
         self.video_process = None
         self._start_preview()
@@ -116,6 +117,6 @@ class PicroscopyCamera(object):
 
     def _generate_thumbnail(self, image, thumb):
         im = Image.open(image)
-        im.resize((200, 200), Image.ANTIALIAS)
+        im.thumbnail(self.thumbs_size, Image.ANTIALIAS)
         im.save(thumb, optimize=True, progressive=True)
 

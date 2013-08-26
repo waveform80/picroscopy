@@ -68,6 +68,12 @@ class PicroscopyConsoleApp(object):
             help='the directory from which to read the static website files. '
             'Default: %(default)s')
         self.parser.add_argument(
+            '--thumbnails-size', dest='thumbs_size', action='store',
+            metavar='WxH',
+            type=lambda s: [int(i) for i in s.split('x', 1)],
+            help='the size that thumbnails should be generated at by the '
+            'website. Default: %(default)s')
+        self.parser.add_argument(
             '-P', '--pdb', dest='debug', action='store_true',
             help='run under PDB (debug mode)')
         self.parser.set_defaults(
@@ -77,6 +83,7 @@ class PicroscopyConsoleApp(object):
             daemon=False,
             address='127.0.0.1',
             port=8000,
+            thumbs_size='320x320',
             thumbs_dir=os.path.join(HERE, 'data', 'thumbs'),
             images_dir=os.path.join(HERE, 'data', 'images'),
             templates_dir=os.path.join(HERE, 'templates'),
@@ -112,8 +119,11 @@ class PicroscopyConsoleApp(object):
         httpd = make_server(
             args.address, args.port,
             PicroscopyWsgiApp(
-                args.images_dir, args.thumbs_dir,
-                args.static_dir, args.templates_dir
+                images_dir=args.images_dir,
+                thumbs_dir=args.thumbs_dir,
+                thumbs_size=args.thumbs_size,
+                static_dir=args.static_dir,
+                templates_dir=args.templates_dir,
                 )
             )
         try:

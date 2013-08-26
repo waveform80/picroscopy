@@ -11,13 +11,23 @@ from wheezy.routing import PathRouter, url
 
 from picroscopy.camera import PicroscopyCamera
 
+HERE = os.path.abspath(os.path.dirname(__file__))
+
 
 class PicroscopyWsgiApp(object):
-    def __init__(self, images_dir, thumbs_dir, static_dir, templates_dir):
+    def __init__(self, **kwargs):
         super().__init__()
-        self.camera = PicroscopyCamera(images_dir, thumbs_dir)
-        self.static_dir = os.path.abspath(os.path.normpath(static_dir))
-        self.templates_dir = os.path.abspath(os.path.normpath(templates_dir))
+        self.camera = PicroscopyCamera(
+            kwargs.get('images_dir', os.path.join(HERE, 'data', 'images')),
+            kwargs.get('thumbs_dir', os.path.join(HERE, 'data', 'thumbs')),
+            kwargs.get('thumbs_size', (320, 320))
+            )
+        self.static_dir = os.path.abspath(os.path.normpath(kwargs.get(
+            'static_dir', os.path.join(HERE, 'static')
+            )))
+        self.templates_dir = os.path.abspath(os.path.normpath(kwargs.get(
+            'templates_dir', os.path.join(HERE, 'templates')
+            )))
         self.templates = PageTemplateLoader(
             self.templates_dir, default_extension='.pt')
         self.layout = self.templates['layout']
