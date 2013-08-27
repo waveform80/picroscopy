@@ -24,6 +24,38 @@ logging.getLogger().addHandler(_CONSOLE)
 # Determine the location of the current module on the filesystem
 HERE = os.path.abspath(os.path.dirname(__file__))
 
+
+def size(s):
+    """
+    Parses a string containing a Width[xHeight] image size specification.
+    """
+    if 'x' in s:
+        w, h = s.split('x', 1)
+    else:
+        w = h = s
+    if not (w.isdigit() and h.isdigit()):
+        raise ValueError(
+            'size "%s" is invalid; width and/or height are not numbers' % s)
+    return (int(w), int(h))
+
+def interface(s):
+    """
+    Parses a string containing a host[:port] specification.
+    """
+    if not s:
+        return None
+    if ':' in s:
+        host, port = s.split(':', 1)
+        if not host:
+            host = '0.0.0.0'
+        if port.isdigit():
+            port = int(port)
+    else:
+        host = s
+        port = 80
+    return (host, port)
+
+
 class PicroscopyConsoleApp(object):
     def __init__(self):
         super().__init__()
@@ -42,52 +74,69 @@ class PicroscopyConsoleApp(object):
             '-l', '--log-file', dest='log_file', metavar='FILE',
             help='log messages to the specified file')
         self.parser.add_argument(
+            '-P', '--pdb', dest='debug', action='store_true',
+            help='run under PDB (debug mode)')
+        self.parser.add_argument(
             '-d', '--daemon', dest='daemon', action='store_const', const=True,
             help='run as a background daemon process')
         self.parser.add_argument(
-            '-p', '--port', dest='port', action='store',
-            help='the port the web-server will listen on. Default: %(default)s')
-        self.parser.add_argument(
-            '-a', '--address', dest='address', action='store', metavar='HOST',
-            help='the address of the interface the web-server will listen on. '
-            'Specify 0.0.0.0 to listen on all interfaces. Default: %(default)s')
+            '-L', '--listen', dest='listen', action='store',
+            metavar='HOST[:PORT]', type=interface,
+            help='the address and port of the interface the web-server will '
+            'listen on. Default: %(default)s')
         self.parser.add_argument(
             '--images-dir', dest='images_dir', action='store',
-            metavar='DIR', help='the directory in which to store images '
-            'taken with the camera. Default: %(default)s')
+            metavar='DIR',
+            help='the directory in which to store images taken with the '
+            'camera. Default: %(default)s')
         self.parser.add_argument(
             '--thumbnails-dir', dest='thumbs_dir', action='store',
-            metavar='DIR', help='the directory in which to store thumbnail '
-            'images taken by the website. Default: %(default)s')
+            metavar='DIR',
+            help='the directory in which to store thumbnail images taken '
+            'by the website. Default: %(default)s')
         self.parser.add_argument(
             '--templates-dir', dest='templates_dir', action='store',
-            metavar='DIR', help='the directory from which to read the '
-            'website templates. Default: %(default)s')
+            metavar='DIR',
+            help='the directory from which to read the website templates. '
+            'Default: %(default)s')
         self.parser.add_argument(
             '--static-dir', dest='static_dir', action='store', metavar='DIR',
             help='the directory from which to read the static website files. '
             'Default: %(default)s')
         self.parser.add_argument(
             '--thumbnails-size', dest='thumbs_size', action='store',
-            metavar='WxH',
-            type=lambda s: [int(i) for i in s.split('x', 1)],
+            metavar='WIDTHxHEIGHT', type=size,
             help='the size that thumbnails should be generated at by the '
             'website. Default: %(default)s')
         self.parser.add_argument(
-            '-P', '--pdb', dest='debug', action='store_true',
-            help='run under PDB (debug mode)')
+            '--email-from', dest='email_from', action='store',
+            metavar='USER[@HOST]',
+            help='the address from which email will appear to be sent. '
+            'Default: %(default)s')
+        email_group = self.parser.add_mutually_exclusive_group()
+        email_group.add_argument(
+            '--sendmail', dest='sendmail', action='store', metavar='PATH',
+            help='use the specified sendmail binary to send email. '
+            'Default: %(default)s')
+        email_group.add_argument(
+            '--smtp-server', dest='smtp_server', action='store',
+            metavar='HOST[:PORT]', type=interface,
+            help='send email directly using the specified SMTP smarthost '
+            '(mutually exclusive with --sendmail)')
         self.parser.set_defaults(
             debug=False,
             log_level=logging.WARNING,
             log_file=None,
             daemon=False,
-            address='127.0.0.1',
-            port=8000,
+            listen='0.0.0.0:80',
             thumbs_size='320x320',
             thumbs_dir=os.path.join(HERE, 'data', 'thumbs'),
             images_dir=os.path.join(HERE, 'data', 'images'),
             templates_dir=os.path.join(HERE, 'templates'),
             static_dir=os.path.join(HERE, 'static'),
+            sendmail='/usr/sbin/sendmail',
+            smtp_server='',
+            email_from='picroscopy',
             )
 
     def __call__(self, args=None):
@@ -106,8 +155,12 @@ class PicroscopyConsoleApp(object):
         else:
             logging.getLogger().setLevel(logging.INFO)
         if args.debug:
-            import pudb
-            return pudb.runcall(self.main, args)
+            try:
+                import pudb
+            except ImportError:
+                pudb = None
+                import pdb
+            return (pudb or pdb).runcall(self.main, args)
         else:
             try:
                 return self.main(args) or 0
@@ -116,21 +169,13 @@ class PicroscopyConsoleApp(object):
                 return 1
 
     def main(self, args):
-        httpd = make_server(
-            args.address, args.port,
-            PicroscopyWsgiApp(
-                images_dir=args.images_dir,
-                thumbs_dir=args.thumbs_dir,
-                thumbs_size=args.thumbs_size,
-                static_dir=args.static_dir,
-                templates_dir=args.templates_dir,
-                )
-            )
+        app = PicroscopyWsgiApp(**vars(args))
         try:
-            logging.info('Serving on http://%s:%s' % (args.address, args.port))
+            httpd = make_server(args.listen[0], args.listen[1], app)
+            logging.warning('Listening on %s:%s' % (args.listen[0], args.listen[1]))
             httpd.serve_forever()
         finally:
-            httpd.application.camera.close()
+            app.camera.close()
         return 0
 
 

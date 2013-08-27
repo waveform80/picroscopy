@@ -6,20 +6,33 @@ import subprocess
 import datetime
 import tempfile
 import zipfile
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
 
 from PIL import Image
 
+HERE = os.path.abspath(os.path.dirname(__file__))
+
 
 class PicroscopyCamera(object):
-    def __init__(self, images_dir, thumbs_dir, thumbs_size=(320, 320)):
+    def __init__(self, **kwargs):
         super().__init__()
-        if not os.path.exists(images_dir):
-            raise ValueError('The images directory %s does not exist' % images_dir)
-        if not os.path.exists(thumbs_dir):
-            raise ValueError('The thumbnails directory %s does not exist' % thumbs_dir)
-        self.images_dir = images_dir
-        self.thumbs_dir = thumbs_dir
-        self.thumbs_size = tuple(thumbs_size)
+        self.images_dir = kwargs.get(
+            'images_dir', os.path.join(HERE, 'data', 'images'))
+        self.thumbs_dir = kwargs.get(
+            'thumbs_dir', os.path.join(HERE, 'data', 'thumbs'))
+        if not os.path.exists(self.images_dir):
+            raise ValueError(
+                'The images directory %s does not exist' % self.images_dir)
+        if not os.path.exists(self.thumbs_dir):
+            raise ValueError(
+                'The thumbnails directory %s does not exist' % self.thumbs_dir)
+        self.thumbs_size = kwargs.get('thumbs_size', (320, 320))
+        self.email_from = kwargs.get('email_from', 'picroscopy')
+        self.sendmail = kwargs.get('sendmail', '/usr/sbin/sendmail')
+        self.smtp_server = kwargs.get('smtp_server', None)
         self.capture_lock = threading.Lock()
         self.video_process = None
         self._start_preview()
@@ -103,6 +116,28 @@ class PicroscopyCamera(object):
                 archive.write(os.path.join(self.images_dir, f), f)
         data.seek(0)
         return data
+
+    def email(self, address):
+        # Construct the multi-part email message
+        msg = MIMEMultipart()
+        msg['From'] = self.email_from
+        msg['To'] = address
+        msg['Subject'] = 'Picroscopy: %d image(s)' % len(self)
+        body = ['Please find attached %d image(s) from Picroscopy:', '']
+        body.extend(image for image in self)
+        body = '\n'.join(body)
+        msg.attach(MIMEText(body))
+        for image in self:
+            _, f = self.open_image(image)
+            msg.attach(MIMEImage(f.read()))
+        if self.smtp_server:
+            s = smtplib.SMTP(*self.smtp_server)
+            s.send_message(msg)
+            s.quit()
+        else:
+            with subprocess.Popen(
+                    [self.sendmail, '-t', '-oi'], stdin=subprocess.PIPE) as proc:
+                proc.communicate(msg.as_string().encode('ascii'))
 
     def open_image(self, image):
         if not image in self:

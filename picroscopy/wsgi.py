@@ -17,11 +17,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 class PicroscopyWsgiApp(object):
     def __init__(self, **kwargs):
         super().__init__()
-        self.camera = PicroscopyCamera(
-            kwargs.get('images_dir', os.path.join(HERE, 'data', 'images')),
-            kwargs.get('thumbs_dir', os.path.join(HERE, 'data', 'thumbs')),
-            kwargs.get('thumbs_size', (320, 320))
-            )
+        self.camera = PicroscopyCamera(**kwargs)
         self.static_dir = os.path.abspath(os.path.normpath(kwargs.get(
             'static_dir', os.path.join(HERE, 'static')
             )))
@@ -61,14 +57,23 @@ class PicroscopyWsgiApp(object):
         return resp(environ, start_response)
 
     def not_found(self, req):
+        """
+        Handler for unknown locations (404)
+        """
         raise exc.HTTPNotFound(
             'The resource at %s could not be found' % req.path_info)
 
     def do_capture(self, req):
+        """
+        Take a new image with the camera and add it to the library
+        """
         self.camera.capture()
         raise exc.HTTPFound(location=self.router.path_for('home'))
 
     def do_download(self, req):
+        """
+        Send the camera library as a .zip archive
+        """
         archive = self.camera.archive()
         size = archive.seek(0, io.SEEK_END)
         archive.seek(0)
@@ -80,9 +85,16 @@ class PicroscopyWsgiApp(object):
         return resp
 
     def do_send(self, req):
+        """
+        Send the camera library as a set of attachments to an email
+        """
+        self.camera.email(req.params['email'])
         raise exc.HTTPFound(location=self.router.path_for('home'))
 
     def do_clear(self, req):
+        """
+        Clear the camera library of all images
+        """
         self.camera.clear()
         raise exc.HTTPFound(location=self.router.path_for('home'))
 
