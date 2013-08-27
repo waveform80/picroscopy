@@ -173,7 +173,7 @@
       <div class="row">
         <div class="small-9 columns">
           <ul class="button-group radius">
-            <li><a class="small button" href="#" onclick="document.forms[0].submit();">Update</a></li>
+            <li><a class="small button" href="#" onclick="document.forms[0].submit(); return false;">Update</a></li>
             <li><a class="small button" href="${router.path_for('reset')}">Defaults</a></li>
           </ul>
         </div>

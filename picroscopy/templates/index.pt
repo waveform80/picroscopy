@@ -2,20 +2,43 @@
   <div metal:fill-slot="content" tal:omit-tag="">
 
     <div class="row">
-      <div class="small-12 columns">
-        <ul class="button-group radius">
-          <li><a class="small button" href="${router.path_for('capture')}">Capture</a></li>
-          <li><a class="small button" href="${router.path_for('template', page='settings')}">Settings</a></li>
-          <li><a class="small button ${'disabled' if not camera else None}" href="${router.path_for('clear')}">Clear</a></li>
-        </ul>
+      <div class="small-6 columns">
+        <dl class="sub-nav">
+          <dt>Show:</dt>
+          <dd tal:attributes="class 'active' if req.params.get('show', 'grid') == 'grid' else None">
+          <a href="?show=grid">Grid</a>
+          </dd>
+          <dd tal:attributes="class 'active' if req.params.get('show', 'grid') == 'table' else None">
+          <a href="?show=table">Table</a>
+          </dd>
+        </dl>
+      </div>
+      <div class="small-6 columns">
+        <p class="right">${'No' if not camera else len(camera)} image${'s' if len(camera) != 1 else ''} stored.</p>
       </div>
     </div>
 
     <div class="row">
       <div class="small-12 columns">
-        <p tal:condition="not camera">There are no images to display.</p>
-        <p tal:condition="camera">${len(camera)} image(s) stored.</p>
-        <ul class="gallery small-block-grid-2 large-block-grid-4" tal:condition="camera">
+        <table tal:condition="camera and (req.params.get('show', 'grid') == 'table')">
+          <thead>
+            <tr><th>Thumbnail</th><th>Filename</th><th>Size</th><th>Created</th></tr>
+          </thead>
+          <tbody>
+            <tr tal:repeat="image camera">
+              <td>
+                <a href="${router.path_for('image', image=image)}">
+                  <img width="200" src="${router.path_for('thumb', image=image)}" />
+                </a>
+              </td>
+              <td>${image}</td>
+              <td>${helpers.image_size(image)}</td>
+              <td>${helpers.image_created(image)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <ul class="gallery small-block-grid-2 large-block-grid-4"
+            tal:condition="camera and (req.params.get('show', 'grid') == 'grid')">
           <li tal:repeat="image camera">
           <a href="${router.path_for('image', image=image)}">
             <img src="${router.path_for('thumb', image=image)}" />
@@ -27,18 +50,34 @@
       </div>
     </div>
 
+    <div class="row">
+      <div class="small-12 columns">
+        <hr />
+        <div class="button-bar">
+          <ul class="button-group radius">
+            <li><a class="small button" href="${router.path_for('capture')}">Capture</a></li>
+            <li><a class="small button" href="${router.path_for('template', page='settings')}">Settings</a></li>
+          </ul>
+          <ul class="button-group radius" tal:condition="camera">
+            <li><a class="small button disabled" href="${router.path_for('delete')}">Delete Selected</a></li>
+            <li><a class="small button" href="${router.path_for('clear')}">Delete All</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
     <div class="row" tal:condition="camera">
       <div class="small-2 columns">
         <a class="small button radius" href="${router.path_for('download')}">Download</a>
       </div>
       <div class="small-10 columns">
         <div class="row collapse">
-          <form method="POST" action="${router.path_for('send')}">
+          <form id="send-form" method="POST" action="${router.path_for('send')}">
             <div class="small-10 columns">
               <input type="email" name="email" placeholder="E-mail address" />
             </div>
             <div class="small-2 columns">
-              <a class="postfix small button radius" href="#" onclick="document.forms[0].submit();">Send</a>
+              <a class="postfix small button radius" href="#" onclick="document.getElementById('send-form').submit(); return false;">Send</a>
             </div>
           </form>
         </div>

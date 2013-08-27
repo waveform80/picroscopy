@@ -272,19 +272,35 @@ class PicroscopyCamera(object):
     vflip = property(_get_vflip, _set_vflip)
 
     def capture(self):
-        capture_image(os.path.join(
-            self.images_dir,
-            datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S.jpg')
-            ), self)
+        # Safely allocate a new filename for the image
+        d = datetime.datetime.now().strftime('%Y%m%d')
+        i = 1
+        while True:
+            filename = os.path.join(self.images_dir, 'PIC-%s-%04d.jpg' % (d, i))
+            try:
+                # XXX mode 'x' is only available in Py3.3+
+                fd = os.open(filename, os.O_CREAT | os.O_EXCL)
+            except OSError:
+                i += 1
+            else:
+                os.close(fd)
+                break
+        capture_image(filename, self)
+
+    def remove(self, image):
+        try:
+            os.unlink(os.path.join(self.images_dir, image))
+        except OSError:
+            raise KeyError(image)
+        try:
+            os.unlink(os.path.join(self.thumbs_dir, image))
+        except OSError as e:
+            if e.errno != 2:
+                raise
 
     def clear(self):
-        for f in os.listdir(self.images_dir):
-            image = os.path.join(self.images_dir, f)
-            thumb = os.path.join(self.thumbs_dir, f)
-            if f.endswith('.jpg') and os.path.exists(image):
-                os.unlink(image)
-                if os.path.exists(thumb):
-                    os.unlink(thumb)
+        for f in self:
+            self.remove(f)
 
     def archive(self):
         data = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)
@@ -320,26 +336,36 @@ class PicroscopyCamera(object):
                     [self.sendmail, '-t', '-oi'], stdin=subprocess.PIPE) as proc:
                 proc.communicate(msg.as_string().encode('ascii'))
 
+    def stat_image(self, image):
+        if not image in self:
+            raise KeyError(image)
+        return os.stat(os.path.join(self.images_dir, image))
+
     def open_image(self, image):
         if not image in self:
-            raise ValueError('Invalid image %s' % image)
-        image = os.path.join(self.images_dir, image)
-        return os.stat(image), io.open(image, 'rb')
+            raise KeyError(image)
+        return io.open(os.path.join(self.images_dir, image), 'rb')
+
+    def stat_thumbnail(self, image):
+        if not image in self:
+            raise KeyError(image)
+        self._generate_thumbnail(image)
+        return os.stat(os.path.join(self.thumbs_dir, image))
 
     def open_thumbnail(self, image):
         if not image in self:
-            raise ValueError('Invalid image %s' % image)
+            raise KeyError(image)
+        self._generate_thumbnail(image)
+        return io.open(os.path.join(self.thumbs_dir, image), 'rb')
+
+    def _generate_thumbnail(self, image):
         thumb = os.path.join(self.thumbs_dir, image)
         image = os.path.join(self.images_dir, image)
         if (
                 not os.path.exists(thumb) or
                 os.stat(thumb).st_mtime < os.stat(image).st_mtime
                 ):
-            self._generate_thumbnail(image, thumb)
-        return os.stat(thumb), io.open(thumb, 'rb')
-
-    def _generate_thumbnail(self, image, thumb):
-        im = Image.open(image)
-        im.thumbnail(self.thumbs_size, Image.ANTIALIAS)
-        im.save(thumb, optimize=True, progressive=True)
+            im = Image.open(image)
+            im.thumbnail(self.thumbs_size, Image.ANTIALIAS)
+            im.save(thumb, optimize=True, progressive=True)
 

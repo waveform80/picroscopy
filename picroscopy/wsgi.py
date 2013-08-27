@@ -1,8 +1,10 @@
 import os
 import io
 import re
+import math
 import logging
 import mimetypes
+import datetime
 from wsgiref.util import FileWrapper
 
 from webob import Request, Response, exc
@@ -14,10 +16,43 @@ from picroscopy.camera import PicroscopyCamera
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
+class WebHelpers(object):
+    def __init__(self, camera):
+        self.camera = camera
+
+    def image_size(self, image):
+        return self.format_size(
+            self.camera.stat_image(image).st_size, 'B', binary=True)
+
+    def image_created(self, image):
+        return datetime.datetime.fromtimestamp(
+            self.camera.stat_image(image).st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+
+    def format_size(self, size, unit, precision=1, binary=False):
+        prefixes = ('', 'k', 'M', 'G', 'T', 'P', 'E', 'Z')
+        if not binary:
+            base = 1000
+        else:
+            base = 1024
+        if size <= 0:
+            i = 0
+        else:
+            i = int(math.log(size) / math.log(base))
+            if i >= len(prefixes):
+                i = len(prefixes) - 1
+        size /= base**i
+        return '{size:.{prec}f}{prefix}{unit}'.format(
+                size=size,
+                prec=precision,
+                prefix=prefixes[i],
+                unit=unit)
+
+
 class PicroscopyWsgiApp(object):
     def __init__(self, **kwargs):
         super().__init__()
         self.camera = PicroscopyCamera(**kwargs)
+        self.helpers = WebHelpers(self.camera)
         self.static_dir = os.path.abspath(os.path.normpath(kwargs.get(
             'static_dir', os.path.join(HERE, 'static')
             )))
@@ -38,6 +73,7 @@ class PicroscopyWsgiApp(object):
             url('/capture',            self.do_capture,  name='capture'),
             url('/download',           self.do_download, name='download'),
             url('/send',               self.do_send,     name='send'),
+            url('/delete',             self.do_delete,   name='delete'),
             url('/clear',              self.do_clear,    name='clear'),
             url('/static/{path:any}',  self.do_static,   name='static'),
             url('/images/{image}.jpg', self.do_image,    name='image'),
@@ -131,6 +167,12 @@ class PicroscopyWsgiApp(object):
         self.flashes.append('Email sent to %s' % req.params['email'])
         raise exc.HTTPFound(location=self.router.path_for('home'))
 
+    def do_delete(self, req):
+        """
+        Delete the selected images from camera library
+        """
+        raise NotImplementedError
+
     def do_clear(self, req):
         """
         Clear the camera library of all images
@@ -144,11 +186,10 @@ class PicroscopyWsgiApp(object):
         """
         if not image in self.camera:
             self.not_found(req)
-        stat, f = self.camera.open_image(image)
         resp = Response()
         resp.content_type = 'image/jpeg'
-        resp.content_length = stat.st_size
-        resp.app_iter = FileWrapper(f)
+        resp.content_length = self.camera.stat_image(image).st_size
+        resp.app_iter = FileWrapper(self.camera.open_image(image))
         return resp
 
     def do_thumb(self, req, image):
@@ -157,11 +198,10 @@ class PicroscopyWsgiApp(object):
         """
         if not image in self.camera:
             self.not_found(req)
-        stat, f = self.camera.open_thumbnail(image)
         resp = Response()
         resp.content_type = 'image/jpeg'
-        resp.content_length = stat.st_size
-        resp.app_iter = FileWrapper(f)
+        resp.content_length = self.camera.stat_thumbnail(image).st_size
+        resp.app_iter = FileWrapper(self.camera.open_thumbnail(image))
         return resp
 
     def do_static(self, req, path):
@@ -192,6 +232,8 @@ class PicroscopyWsgiApp(object):
         except ValueError:
             self.not_found(req)
         resp.text = template(
+            req=req,
+            helpers=self.helpers,
             layout=self.layout,
             flashes=self.flashes,
             camera=self.camera,
