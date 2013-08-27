@@ -218,7 +218,7 @@ class PicroscopyCamera(object):
             'sports',
             'snow',
             'beach',
-            'verylong',
+            #'verylong',
             'fixedfps',
             'antishake',
             'fireworks',

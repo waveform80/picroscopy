@@ -92,7 +92,7 @@
             <option value="sports"       tal:attributes="selected camera.exposure=='sports'      ">sports      </option>
             <option value="snow"         tal:attributes="selected camera.exposure=='snow'        ">snow        </option>
             <option value="beach"        tal:attributes="selected camera.exposure=='beach'       ">beach       </option>
-            <option value="verylong"     tal:attributes="selected camera.exposure=='verylong'    ">verylong    </option>
+            <!--option value="verylong"     tal:attributes="selected camera.exposure=='verylong'    ">verylong    </option-->
             <option value="fixedfps"     tal:attributes="selected camera.exposure=='fixedfps'    ">fixedfps    </option>
             <option value="antishake"    tal:attributes="selected camera.exposure=='antishake'   ">antishake   </option>
             <option value="fireworks"    tal:attributes="selected camera.exposure=='fireworks'   ">fireworks   </option>
