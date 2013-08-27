@@ -62,6 +62,24 @@ class PicroscopyConsoleApp(object):
         self.parser = argparse.ArgumentParser(
             description=__doc__,
         )
+        self.parser.set_defaults(
+            debug=False,
+            gstreamer=False,
+            log_level=logging.WARNING,
+            log_file=None,
+            daemon=False,
+            listen='0.0.0.0:80',
+            thumbs_size='320x320',
+            thumbs_dir=os.path.join(HERE, 'data', 'thumbs'),
+            images_dir=os.path.join(HERE, 'data', 'images'),
+            templates_dir=os.path.join(HERE, 'templates'),
+            static_dir=os.path.join(HERE, 'static'),
+            sendmail='/usr/sbin/sendmail',
+            smtp_server='',
+            email_from='picroscopy',
+            raspivid='/usr/bin/raspivid',
+            raspistill='/usr/bin/raspistill',
+            )
         self.parser.add_argument('--version', action='version',
             version=__version__)
         self.parser.add_argument(
@@ -76,6 +94,10 @@ class PicroscopyConsoleApp(object):
         self.parser.add_argument(
             '-P', '--pdb', dest='debug', action='store_true',
             help='run under PDB (debug mode)')
+        self.parser.add_argument(
+            '-G', '--gstreamer', dest='gstreamer', action='store_true',
+            help='use GStreamer instead of raspivid/still - this is '
+            'intended for debugging on a non-RPi platform')
         self.parser.add_argument(
             '-d', '--daemon', dest='daemon', action='store_const', const=True,
             help='run as a background daemon process')
@@ -123,21 +145,12 @@ class PicroscopyConsoleApp(object):
             metavar='HOST[:PORT]', type=interface,
             help='send email directly using the specified SMTP smarthost '
             '(mutually exclusive with --sendmail)')
-        self.parser.set_defaults(
-            debug=False,
-            log_level=logging.WARNING,
-            log_file=None,
-            daemon=False,
-            listen='0.0.0.0:80',
-            thumbs_size='320x320',
-            thumbs_dir=os.path.join(HERE, 'data', 'thumbs'),
-            images_dir=os.path.join(HERE, 'data', 'images'),
-            templates_dir=os.path.join(HERE, 'templates'),
-            static_dir=os.path.join(HERE, 'static'),
-            sendmail='/usr/sbin/sendmail',
-            smtp_server='',
-            email_from='picroscopy',
-            )
+        self.parser.add_argument(
+            '--raspivid', dest='raspivid', action='store', metavar='PATH',
+            help='the path to the raspivid binary. Default: %(default)s')
+        self.parser.add_argument(
+            '--raspistill', dest='raspistill', action='store', metavar='PATH',
+            help='the path to the raspistill binary. Default: %(default)s')
 
     def __call__(self, args=None):
         if args is None:
