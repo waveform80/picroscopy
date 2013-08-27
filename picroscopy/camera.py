@@ -84,7 +84,7 @@ def capture_image(dest, settings):
             p = subprocess.Popen(cmdline)
             p.communicate()
         finally:
-            start_preview(self)
+            start_preview(settings)
 
 def int_property(value, min_value, max_value, name):
     value = int(value)
