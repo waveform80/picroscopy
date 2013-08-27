@@ -1,4 +1,4 @@
-<div metal:use-macro="layout['layout']" tal:define="title 'Picroscopy'">
+<div metal:use-macro="layout['layout']" tal:define="title 'Library'">
   <div metal:fill-slot="content" tal:omit-tag="">
 
     <div class="row">
@@ -38,7 +38,7 @@
               <input type="email" name="email" placeholder="E-mail address" />
             </div>
             <div class="small-2 columns">
-              <button class="postfix radius" name="submit">Send</button>
+              <a class="postfix small button radius" href="#" onclick="document.forms[0].submit();">Send</a>
             </div>
           </form>
         </div>

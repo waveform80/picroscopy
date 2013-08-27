@@ -15,36 +15,54 @@ from PIL import Image
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-CAMERA_LOCK = threading.Lock()
-VIDEO_PROCESS = None
+CAMERA_LOCK = threading.RLock()
+PREVIEW_PROCESS = None
 USE_GSTREAMER = False
 RASPIVID = '/usr/bin/raspivid'
 RASPISTILL = '/usr/bin/raspistill'
 
 
-def start_preview():
-    global VIDEO_PROCESS
-    if not VIDEO_PROCESS:
-        if USE_GSTREAMER:
-            cmdline = [
-                'gst-launch-0.10',
-                'v4l2src',                              '!',
-                'video/x-raw-yuv,width=320,height=240', '!',
-                'ffmpegcolorspace',                     '!',
-                'xvimagesink',
-                ]
-        else:
-            cmdline = [RASPIVID, '-t', '0']
-        VIDEO_PROCESS = subprocess.Popen(cmdline)
+def raspi_settings(settings):
+    return [
+        '--sharpness',  str(settings.sharpness),
+        '--contrast',   str(settings.contrast),
+        '--brightness', str(settings.brightness),
+        '--saturation', str(settings.saturation),
+        '--ISO',        str(settings.ISO),
+        '--ev',         str(settings.evcomp),
+        '--exposure',   settings.exposure,
+        '--metering',   settings.metering,
+        '--awb',        settings.white_balance,
+        ] + \
+        (['--vstab'] if settings.vstab else []) + \
+        (['--hflip'] if settings.hflip else []) + \
+        (['--vflip'] if settings.vflip else [])
+
+def start_preview(settings):
+    global PREVIEW_PROCESS
+    with CAMERA_LOCK:
+        if not PREVIEW_PROCESS:
+            if USE_GSTREAMER:
+                cmdline = [
+                    'gst-launch-0.10',
+                    'v4l2src',                              '!',
+                    'video/x-raw-yuv,width=320,height=240', '!',
+                    'ffmpegcolorspace',                     '!',
+                    'xvimagesink',
+                    ]
+            else:
+                cmdline = [RASPIVID, '-t', '0'] + raspi_settings(settings)
+            PREVIEW_PROCESS = subprocess.Popen(cmdline)
 
 def stop_preview():
-    global VIDEO_PROCESS
-    if VIDEO_PROCESS:
-        VIDEO_PROCESS.terminate()
-        VIDEO_PROCESS.wait()
-        VIDEO_PROCESS = None
+    global PREVIEW_PROCESS
+    with CAMERA_LOCK:
+        if PREVIEW_PROCESS:
+            PREVIEW_PROCESS.terminate()
+            PREVIEW_PROCESS.wait()
+            PREVIEW_PROCESS = None
 
-def capture_image(dest):
+def capture_image(dest, settings):
     with CAMERA_LOCK:
         stop_preview()
         try:
@@ -62,11 +80,27 @@ def capture_image(dest):
                     RASPISTILL,
                     '-t', '2',
                     '-o', dest,
-                    ]
+                    ] + raspi_settings(settings)
             p = subprocess.Popen(cmdline)
             p.communicate()
         finally:
-            start_preview()
+            start_preview(self)
+
+def int_property(value, min_value, max_value, name):
+    value = int(value)
+    if not (min_value <= value <= max_value):
+        raise ValueError('Invalid %s: %d not between %d and %d' % (
+            name, value, min_value, max_value))
+    return value
+
+def bool_property(value, name):
+    value = bool(int(value))
+    return bool(value)
+
+def str_property(value, valid, name):
+    if not value in valid:
+        raise ValueError('Invalid %s: %s' % (name, value))
+    return value
 
 
 class PicroscopyCamera(object):
@@ -90,10 +124,15 @@ class PicroscopyCamera(object):
         USE_GSTREAMER = kwargs.get('gstreamer', False)
         RASPIVID = kwargs.get('raspivid', '/usr/bin/raspivid')
         RASPISTILL = kwargs.get('raspistill', '/usr/bin/raspistill')
-        start_preview()
+        self.reset()
+        start_preview(self)
 
     def close(self):
         stop_preview()
+
+    def restart(self):
+        stop_preview()
+        start_preview(self)
 
     def __len__(self):
         return sum(
@@ -116,11 +155,127 @@ class PicroscopyCamera(object):
             os.path.exists(os.path.join(self.images_dir, value))
             )
 
+    def reset(self):
+        self._sharpness = 0
+        self._contrast = 0
+        self._brightness = 50
+        self._saturation = 0
+        self._ISO = 400
+        self._evcomp = 0
+        self._vstab = False
+        self._hflip = False
+        self._vflip = False
+        self._exposure = 'auto'
+        self._white_balance = 'auto'
+        self._metering = 'average'
+
+    def _get_sharpness(self):
+        return self._sharpness
+    def _set_sharpness(self, value):
+        self._sharpness = int_property(value, -100, 100, 'Sharpness')
+    sharpness = property(_get_sharpness, _set_sharpness)
+
+    def _get_contrast(self):
+        return self._contrast
+    def _set_contrast(self, value):
+        self._contrast = int_property(value, -100, 100, 'Contrast')
+    contrast = property(_get_contrast, _set_contrast)
+
+    def _get_brightness(self):
+        return self._brightness
+    def _set_brightness(self, value):
+        self._brightness = int_property(value, 0, 100, 'Brightness')
+    brightness = property(_get_brightness, _set_brightness)
+
+    def _get_saturation(self):
+        return self._saturation
+    def _set_saturation(self, value):
+        self._saturation = int_property(value, -100, 100, 'Saturation')
+    saturation = property(_get_saturation, _set_saturation)
+
+    def _get_ISO(self):
+        return self._ISO
+    def _set_ISO(self, value):
+        self._ISO = int_property(value, 100, 800, 'ISO')
+    ISO = property(_get_ISO, _set_ISO)
+
+    def _get_evcomp(self):
+        return self._evcomp
+    def _set_evcomp(self, value):
+        self._evcomp = int_property(value, -10, 10, 'EV compensation')
+    evcomp = property(_get_evcomp, _set_evcomp)
+
+    def _get_exposure(self):
+        return self._exposure
+    def _set_exposure(self, value):
+        self._exposure = str_property(value, (
+            'off',
+            'auto',
+            'night',
+            'nightpreview',
+            'backlight',
+            'spotlight',
+            'sports',
+            'snow',
+            'beach',
+            'verylong',
+            'fixedfps',
+            'antishake',
+            'fireworks',
+            ), 'Exposure')
+    exposure = property(_get_exposure, _set_exposure)
+
+    def _get_white_balance(self):
+        return self._white_balance
+    def _set_white_balance(self, value):
+        self._white_balance = str_property(value, (
+            'off',
+            'auto',
+            'sun',
+            'cloud',
+            'shade',
+            'tungsten',
+            'fluorescent',
+            'incandescent',
+            'flash',
+            'horizon',
+            ), 'White balance')
+    white_balance = property(_get_white_balance, _set_white_balance)
+
+    def _get_metering(self):
+        return self._metering
+    def _set_metering(self, value):
+        self._metering = str_property(value, (
+            'average',
+            'spot',
+            'backlit',
+            'matrix',
+            ), 'Metering')
+    metering = property(_get_metering, _set_metering)
+
+    def _get_vstab(self):
+        return self._vstab
+    def _set_vstab(self, value):
+        self._vstab = bool_property(value, 'Video stabilization')
+    vstab = property(_get_vstab, _set_vstab)
+
+    def _get_hflip(self):
+        return self._hflip
+    def _set_hflip(self, value):
+        self._hflip = bool_property(value, 'Horizontal flip')
+    hflip = property(_get_hflip, _set_hflip)
+
+    def _get_vflip(self):
+        return self._vflip
+    def _set_vflip(self, value):
+        self._vflip = bool_property(value, 'Vertical flip')
+    vflip = property(_get_vflip, _set_vflip)
+
     def capture(self):
         capture_image(os.path.join(
             self.images_dir,
             datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S.jpg')
-            ))
+            ), self)
 
     def clear(self):
         for f in os.listdir(self.images_dir):

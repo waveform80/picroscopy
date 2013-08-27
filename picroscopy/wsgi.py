@@ -27,10 +27,14 @@ class PicroscopyWsgiApp(object):
         self.templates = PageTemplateLoader(
             self.templates_dir, default_extension='.pt')
         self.layout = self.templates['layout']
+        # No need to make flashes a per-session thing - it's a single user app!
+        self.flashes = []
         self.router = PathRouter()
         self.router.add_routes([
             url('/',                   self.do_template, kwargs={'page': 'index'}, name='home'),
             url('/{page}.html',        self.do_template, name='template'),
+            url('/config',             self.do_config,   name='config'),
+            url('/reset',              self.do_reset,    name='reset'),
             url('/capture',            self.do_capture,  name='capture'),
             url('/download',           self.do_download, name='download'),
             url('/send',               self.do_send,     name='send'),
@@ -63,6 +67,41 @@ class PicroscopyWsgiApp(object):
         raise exc.HTTPNotFound(
             'The resource at %s could not be found' % req.path_info)
 
+    def do_reset(self, req):
+        """
+        Reset the camera settings to their defaults
+        """
+        self.camera.reset()
+        self.camera.restart()
+        self.flashes.append('Camera settings reset to defaults')
+        raise exc.HTTPFound(location=self.router.path_for('home'))
+
+    def do_config(self, req):
+        """
+        Configure the camera settings
+        """
+        for setting in ('sharpness', 'contrast', 'brightness', 'saturation', 'ISO', 'evcomp'):
+            try:
+                setattr(self.camera, setting.replace('-', '_'), int(req.params[setting]))
+            except ValueError:
+                self.flashes.append('Invalid %s: %s' % (setting, req.params[setting]))
+        for setting in ('vstab', 'hflip', 'vflip'):
+            try:
+                setattr(self.camera, setting.replace('-', '_'), req.params.get(setting, '0'))
+            except ValueError:
+                self.flashes.append('Invalid %s: %s' % (setting, req.params[setting]))
+        for setting in ('metering', 'white-balance', 'exposure'):
+            try:
+                setattr(self.camera, setting.replace('-', '_'), req.params[setting])
+            except ValueError:
+                self.flashes.append('Invalid %s: %s' % (setting, req.params[setting]))
+        # If any settings failed, re-render the settings form
+        if self.flashes:
+            return self.do_template(req, 'settings')
+        self.camera.restart()
+        self.flashes.append('Camera settings updated')
+        raise exc.HTTPFound(location=self.router.path_for('home'))
+
     def do_capture(self, req):
         """
         Take a new image with the camera and add it to the library
@@ -89,6 +128,7 @@ class PicroscopyWsgiApp(object):
         Send the camera library as a set of attachments to an email
         """
         self.camera.email(req.params['email'])
+        self.flashes.append('Email sent to %s' % req.params['email'])
         raise exc.HTTPFound(location=self.router.path_for('home'))
 
     def do_clear(self, req):
@@ -153,7 +193,9 @@ class PicroscopyWsgiApp(object):
             self.not_found(req)
         resp.text = template(
             layout=self.layout,
+            flashes=self.flashes,
             camera=self.camera,
             router=self.router)
+        del self.flashes[:]
         return resp
 

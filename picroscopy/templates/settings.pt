@@ -1,0 +1,189 @@
+<div metal:use-macro="layout['layout']" tal:define="title 'Settings'">
+  <div metal:fill-slot="content" tal:omit-tag="">
+
+    <form method="POST" action="${router.path_for('config')}">
+
+      <div class="row">
+        <div class="small-3 columns">
+          <label for="sharpness" class="right inline">Sharpness</label>
+        </div>
+        <div class="small-1 columns">-100</div>
+        <div class="small-6 columns">
+          <input name="sharpness" id="sharpness" type="range"
+          min="-100" max="100" value="${camera.sharpness}" />
+        </div>
+        <div class="small-2 columns">+100</div>
+      </div>
+
+      <div class="row">
+        <div class="small-3 columns">
+          <label for="contrast" class="right inline">Contrast</label>
+        </div>
+        <div class="small-1 columns">-100</div>
+        <div class="small-6 columns">
+          <input required name="contrast" id="contrast" type="range"
+            min="-100" max="100" value="${camera.contrast}" />
+        </div>
+        <div class="small-2 columns">+100</div>
+      </div>
+
+      <div class="row">
+        <div class="small-3 columns">
+          <label for="brightness" class="right inline">Brightness</label>
+        </div>
+        <div class="small-1 columns">0</div>
+        <div class="small-6 columns">
+          <input required name="brightness" id="brightness" type="range"
+            min="0" max="100" value="${camera.brightness}" />
+        </div>
+        <div class="small-2 columns">100</div>
+      </div>
+
+      <div class="row">
+        <div class="small-3 columns">
+          <label for="saturation" class="right inline">Saturation</label>
+        </div>
+        <div class="small-1 columns">-100</div>
+        <div class="small-6 columns">
+          <input required name="saturation" id="saturation" type="range"
+            min="-100" max="100" value="${camera.saturation}" />
+        </div>
+        <div class="small-2 columns">+100</div>
+      </div>
+
+      <div class="row">
+        <div class="small-3 columns">
+          <label for="evcomp" class="right inline">EV Compensation</label>
+        </div>
+        <div class="small-1 columns">-10</div>
+        <div class="small-6 columns">
+          <input required name="evcomp" id="evcomp" type="range"
+            min="-10" max="10" value="${camera.evcomp}" />
+        </div>
+        <div class="small-2 columns">+10</div>
+      </div>
+
+      <div class="row">
+        <div class="small-3 columns">
+          <label for="ISO" class="right inline">ISO</label>
+        </div>
+        <div class="small-9 columns">
+          <select required name="ISO" id="ISO">
+            <option value="100" tal:attributes="selected camera.ISO==100">100</option>
+            <option value="200" tal:attributes="selected camera.ISO==200">200</option>
+            <option value="400" tal:attributes="selected camera.ISO==400">400</option>
+            <option value="800" tal:attributes="selected camera.ISO==800">800</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="small-3 columns">
+          <label for="exposure" class="right inline">Exposure</label>
+        </div>
+        <div class="small-9 columns">
+          <select required name="exposure" id="exposure">
+            <option value="off"          tal:attributes="selected camera.exposure=='off'         ">off         </option>
+            <option value="auto"         tal:attributes="selected camera.exposure=='auto'        ">auto        </option>
+            <option value="night"        tal:attributes="selected camera.exposure=='night'       ">night       </option>
+            <option value="nightpreview" tal:attributes="selected camera.exposure=='nightpreview'">nightpreview</option>
+            <option value="backlight"    tal:attributes="selected camera.exposure=='backlight'   ">backlight   </option>
+            <option value="spotlight"    tal:attributes="selected camera.exposure=='spotlight'   ">spotlight   </option>
+            <option value="sports"       tal:attributes="selected camera.exposure=='sports'      ">sports      </option>
+            <option value="snow"         tal:attributes="selected camera.exposure=='snow'        ">snow        </option>
+            <option value="beach"        tal:attributes="selected camera.exposure=='beach'       ">beach       </option>
+            <option value="verylong"     tal:attributes="selected camera.exposure=='verylong'    ">verylong    </option>
+            <option value="fixedfps"     tal:attributes="selected camera.exposure=='fixedfps'    ">fixedfps    </option>
+            <option value="antishake"    tal:attributes="selected camera.exposure=='antishake'   ">antishake   </option>
+            <option value="fireworks"    tal:attributes="selected camera.exposure=='fireworks'   ">fireworks   </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="small-3 columns">
+          <label for="white-balance" class="right inline">White Balance</label>
+        </div>
+        <div class="small-9 columns">
+          <select required name="white-balance" id="white-balance">
+            <option value="off"          tal:attributes="selected camera.white_balance=='off'         ">off         </option>
+            <option value="auto"         tal:attributes="selected camera.white_balance=='auto'        ">auto        </option>
+            <option value="sun"          tal:attributes="selected camera.white_balance=='sun'         ">sun         </option>
+            <option value="cloud"        tal:attributes="selected camera.white_balance=='cloud'       ">cloud       </option>
+            <option value="shade"        tal:attributes="selected camera.white_balance=='shade'       ">shade       </option>
+            <option value="tungsten"     tal:attributes="selected camera.white_balance=='tungsten'    ">tungsten    </option>
+            <option value="fluorescent"  tal:attributes="selected camera.white_balance=='fluorescent' ">fluorescent </option>
+            <option value="incandescent" tal:attributes="selected camera.white_balance=='incandescent'">incandescent</option>
+            <option value="flash"        tal:attributes="selected camera.white_balance=='flash'       ">flash       </option>
+            <option value="horizon"      tal:attributes="selected camera.white_balance=='horizon'     ">horizon     </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="small-3 columns">
+          <label for="metering" class="right inline">Metering</label>
+        </div>
+        <div class="small-9 columns">
+          <select required name="metering" id="metering">
+            <option value="average" tal:attributes="selected camera.metering=='average'">average</option>
+            <option value="spot"    tal:attributes="selected camera.metering=='spot'   ">spot   </option>
+            <option value="backlit" tal:attributes="selected camera.metering=='backlit'">backlit</option>
+            <option value="matrix"  tal:attributes="selected camera.metering=='matrix' ">matrix </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="small-3 columns">
+          &nbsp;
+        </div>
+        <div class="small-9 columns">
+          <label>
+            <input name="vstab" id="vstab" type="checkbox"
+              value="1" tal:attributes="checked camera.vstab" /> Video stabilization
+          </label>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="small-3 columns">
+          &nbsp;
+        </div>
+        <div class="small-9 columns">
+          <label>
+            <input name="hflip" id="hflip" type="checkbox"
+              value="1" tal:attributes="checked camera.hflip" /> Horizontal flip
+          </label>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="small-3 columns">
+          &nbsp;
+        </div>
+        <div class="small-9 columns">
+          <label>
+            <input name="vflip" id="vflip" type="checkbox"
+              value="1" tal:attributes="checked camera.vflip" /> Vertical flip
+          </label>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="small-6 columns">
+          <ul class="button-group radius">
+            <li><a class="small button" href="#" onclick="document.forms[0].submit();">Update</a></li>
+            <li><a class="small button" href="${router.path_for('reset')}">Reset</a></li>
+          </ul>
+        </div>
+        <div class="small-6 columns">
+          <a class="right small secondary button radius" href="${router.path_for('home')}">Cancel</a>
+        </div>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
