@@ -15,11 +15,64 @@ from PIL import Image
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
+CAMERA_LOCK = threading.Lock()
+VIDEO_PROCESS = None
+USE_GSTREAMER = False
+RASPIVID = '/usr/bin/raspivid'
+RASPISTILL = '/usr/bin/raspistill'
+
+
+def start_preview():
+    global VIDEO_PROCESS
+    if not VIDEO_PROCESS:
+        if USE_GSTREAMER:
+            cmdline = [
+                'gst-launch-0.10',
+                'v4l2src',                              '!',
+                'video/x-raw-yuv,width=320,height=240', '!',
+                'ffmpegcolorspace',                     '!',
+                'xvimagesink',
+                ]
+        else:
+            cmdline = [RASPIVID, '-t', '0']
+        VIDEO_PROCESS = subprocess.Popen(cmdline)
+
+def stop_preview():
+    global VIDEO_PROCESS
+    if VIDEO_PROCESS:
+        VIDEO_PROCESS.terminate()
+        VIDEO_PROCESS.wait()
+        VIDEO_PROCESS = None
+
+def capture_image(dest):
+    with CAMERA_LOCK:
+        stop_preview()
+        try:
+            if USE_GSTREAMER:
+                cmdline = [
+                    'gst-launch-0.10',
+                    'v4l2src', 'num-buffers=1',             '!',
+                    'video/x-raw-yuv,width=640,height=480', '!',
+                    'ffmpegcolorspace',                     '!',
+                    'jpegenc',                              '!',
+                    'filesink', 'location=%s' % dest,
+                    ]
+            else:
+                cmdline = [
+                    RASPISTILL,
+                    '-t', '2',
+                    '-o', dest,
+                    ]
+            p = subprocess.Popen(cmdline)
+            p.communicate()
+        finally:
+            start_preview()
+
 
 class PicroscopyCamera(object):
     def __init__(self, **kwargs):
         super().__init__()
-        self.gstreamer = kwargs.get('gstreamer', False)
+        global USE_GSTREAMER, RASPIVID, RASPISTILL
         self.images_dir = kwargs.get(
             'images_dir', os.path.join(HERE, 'data', 'images'))
         self.thumbs_dir = kwargs.get(
@@ -34,14 +87,13 @@ class PicroscopyCamera(object):
         self.email_from = kwargs.get('email_from', 'picroscopy')
         self.sendmail = kwargs.get('sendmail', '/usr/sbin/sendmail')
         self.smtp_server = kwargs.get('smtp_server', None)
-        self.raspivid = kwargs.get('raspivid', '/usr/bin/raspivid')
-        self.raspistill = kwargs.get('raspistill', '/usr/bin/raspistill')
-        self.capture_lock = threading.Lock()
-        self.video_process = None
-        self._start_preview()
+        USE_GSTREAMER = kwargs.get('gstreamer', False)
+        RASPIVID = kwargs.get('raspivid', '/usr/bin/raspivid')
+        RASPISTILL = kwargs.get('raspistill', '/usr/bin/raspistill')
+        start_preview()
 
     def close(self):
-        self._stop_preview()
+        stop_preview()
 
     def __len__(self):
         return sum(
@@ -64,52 +116,11 @@ class PicroscopyCamera(object):
             os.path.exists(os.path.join(self.images_dir, value))
             )
 
-    def _start_preview(self):
-        if self.video_process:
-            raise ValueError('Video preview already started')
-        if self.gstreamer:
-            cmdline = [
-                'gst-launch-0.10',
-                'v4l2src',                              '!',
-                'video/x-raw-yuv,width=320,height=240', '!',
-                'ffmpegcolorspace',                     '!',
-                'xvimagesink',
-                ]
-        else:
-            cmdline = [self.raspivid, '-t', '0']
-        self.video_process = subprocess.Popen(cmdline)
-
-    def _stop_preview(self):
-        if self.video_process:
-            self.video_process.terminate()
-            self.video_process.wait()
-            self.video_process = None
-
     def capture(self):
-        with self.capture_lock:
-            self._stop_preview()
-            try:
-                image_filename = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S.jpg')
-                image_filename = os.path.join(self.images_dir, image_filename)
-                if self.gstreamer:
-                    cmdline = [
-                        'gst-launch-0.10',
-                        'v4l2src', 'num-buffers=1',             '!',
-                        'video/x-raw-yuv,width=640,height=480', '!',
-                        'ffmpegcolorspace',                     '!',
-                        'jpegenc',                              '!',
-                        'filesink', 'location=%s' % image_filename,
-                        ]
-                else:
-                    cmdline = [
-                        self.raspistill,
-                        '-t', '2',
-                        '-o', image_filename,
-                        ]
-                capture_process = subprocess.Popen(cmdline)
-                capture_process.communicate()
-            finally:
-                self._start_preview()
+        capture_image(os.path.join(
+            self.images_dir,
+            datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S.jpg')
+            ))
 
     def clear(self):
         for f in os.listdir(self.images_dir):
