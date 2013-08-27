@@ -26,10 +26,10 @@ REQUIRES = [
     # For some bizarre reason, matplotlib doesn't "require" numpy in its
     # setup.py. The ordering below is also necessary to ensure numpy gets
     # picked up first ... yes, it's backwards ...
-    'webob',
-    'chameleon',
-    'wheezy.routing',
-    'pillow',
+    'webob<=2.0dev',
+    'chameleon<=3.0dev',
+    'wheezy.routing<=2.0dev',
+    'pillow<=3.0dev',
     ]
 
 EXTRA_REQUIRES = {
