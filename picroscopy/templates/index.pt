@@ -4,10 +4,9 @@
     <div class="row">
       <div class="small-12 columns">
         <ul class="button-group radius">
-          <li><a class="button" href="${router.path_for('capture')}">Take Image</a></li>
-          <li><a class="button ${'disabled' if not camera else None}" href="${router.path_for('download')}">Download</a></li>
-          <li><a class="button ${'disabled' if not camera else None}" href="${router.path_for('send')}">Send</a></li>
-          <li><a class="button ${'disabled' if not camera else None}" href="${router.path_for('clear')}">Clear</a></li>
+          <li><a class="small button" href="${router.path_for('capture')}">Take Image</a></li>
+          <li><a class="small button" href="${router.path_for('template', page='settings')}">Camera Settings</a></li>
+          <li><a class="small button ${'disabled' if not camera else None}" href="${router.path_for('clear')}">Erase All</a></li>
         </ul>
       </div>
     </div>
@@ -28,14 +27,21 @@
       </div>
     </div>
 
-    <div class="row">
-      <div class="small-12 columns">
-        <ul class="button-group radius">
-          <li><a class="button" href="${router.path_for('capture')}">Take Image</a></li>
-          <li><a class="button ${'disabled' if not camera else None}" href="${router.path_for('download')}">Download</a></li>
-          <li><a class="button ${'disabled' if not camera else None}" href="${router.path_for('send')}">Send</a></li>
-          <li><a class="button ${'disabled' if not camera else None}" href="${router.path_for('clear')}">Clear</a></li>
-        </ul>
+    <div class="row" tal:condition="camera">
+      <div class="small-2 columns">
+        <a class="small button radius" href="${router.path_for('download')}">Download</a>
+      </div>
+      <div class="small-10 columns">
+        <div class="row collapse">
+          <form method="POST" action="${router.path_for('send')}">
+            <div class="small-10 columns">
+              <input type="email" name="email" placeholder="E-mail address" />
+            </div>
+            <div class="small-2 columns">
+              <button class="postfix radius" name="submit">Send</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
 
