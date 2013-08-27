@@ -83,7 +83,7 @@
         </div>
         <div class="small-9 columns">
           <select required name="exposure" id="exposure">
-            <option value="off"          tal:attributes="selected camera.exposure=='off'         ">off         </option>
+            <!--option value="off"          tal:attributes="selected camera.exposure=='off'         ">off         </option-->
             <option value="auto"         tal:attributes="selected camera.exposure=='auto'        ">auto        </option>
             <option value="night"        tal:attributes="selected camera.exposure=='night'       ">night       </option>
             <option value="nightpreview" tal:attributes="selected camera.exposure=='nightpreview'">nightpreview</option>

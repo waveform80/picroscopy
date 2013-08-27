@@ -209,7 +209,7 @@ class PicroscopyCamera(object):
         return self._exposure
     def _set_exposure(self, value):
         self._exposure = str_property(value, (
-            'off',
+            #'off',
             'auto',
             'night',
             'nightpreview',
