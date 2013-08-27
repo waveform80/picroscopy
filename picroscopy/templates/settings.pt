@@ -171,13 +171,13 @@
       </div>
 
       <div class="row">
-        <div class="small-6 columns">
+        <div class="small-9 columns">
           <ul class="button-group radius">
             <li><a class="small button" href="#" onclick="document.forms[0].submit();">Update</a></li>
-            <li><a class="small button" href="${router.path_for('reset')}">Reset</a></li>
+            <li><a class="small button" href="${router.path_for('reset')}">Defaults</a></li>
           </ul>
         </div>
-        <div class="small-6 columns">
+        <div class="small-3 columns">
           <a class="right small secondary button radius" href="${router.path_for('home')}">Cancel</a>
         </div>
       </div>

@@ -4,9 +4,9 @@
     <div class="row">
       <div class="small-12 columns">
         <ul class="button-group radius">
-          <li><a class="small button" href="${router.path_for('capture')}">Take Image</a></li>
-          <li><a class="small button" href="${router.path_for('template', page='settings')}">Camera Settings</a></li>
-          <li><a class="small button ${'disabled' if not camera else None}" href="${router.path_for('clear')}">Erase All</a></li>
+          <li><a class="small button" href="${router.path_for('capture')}">Capture</a></li>
+          <li><a class="small button" href="${router.path_for('template', page='settings')}">Settings</a></li>
+          <li><a class="small button ${'disabled' if not camera else None}" href="${router.path_for('clear')}">Clear</a></li>
         </ul>
       </div>
     </div>
