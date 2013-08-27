@@ -146,7 +146,10 @@ class PicroscopyCamera(object):
         msg['From'] = self.email_from
         msg['To'] = address
         msg['Subject'] = 'Picroscopy: %d image(s)' % len(self)
-        body = ['Please find attached %d image(s) from Picroscopy:', '']
+        body = [
+            'Please find attached %d image(s) from Picroscopy:' % len(self),
+            '',
+            ]
         body.extend(image for image in self)
         body = '\n'.join(body)
         msg.attach(MIMEText(body))
