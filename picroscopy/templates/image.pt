@@ -2,15 +2,19 @@
   <div metal:fill-slot="content" tal:omit-tag="">
 
     <div class="row">
-      <div class="large-9 columns">
+      <div class="large-8 columns">
         <img src="${router.path_for('image', image=image)}" />
       </div>
-      <div class="large-3 columns">
+      <div class="large-4 columns">
         <div class="show-for-small" style="height: 1em;"></div>
         <table>
           <tbody>
             <tr><th>Size</th>   <td>${helpers.image_size(image)}</td></tr>
             <tr><th>Created</th><td>${helpers.image_created(image)}</td></tr>
+            <tr><th colspan="2">EXIF Data</th></tr>
+            <tr tal:repeat="ex helpers.image_exif(image).items()">
+              <th>${ex[0]}</th><td>${ex[1]}</td>
+            </tr>
           </tbody>
         </table>
       </div>

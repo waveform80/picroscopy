@@ -13,6 +13,9 @@ from email.mime.image import MIMEImage
 
 from PIL import Image
 
+from picroscopy.exif import format_exif
+
+
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 CAMERA_LOCK = threading.RLock()
@@ -346,6 +349,15 @@ class PicroscopyCamera(object):
         if not image in self:
             raise KeyError(image)
         return io.open(os.path.join(self.images_dir, image), 'rb')
+
+    def open_image_exif(self, image):
+        if not image in self:
+            raise KeyError(image)
+        image = os.path.join(self.images_dir, image)
+        im = Image.open(image)
+        result = format_exif(im._getexif())
+        result['Resolution'] = '%d x %d' % im.size
+        return result
 
     def stat_thumbnail(self, image):
         if not image in self:

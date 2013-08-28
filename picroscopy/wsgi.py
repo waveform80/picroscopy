@@ -26,7 +26,10 @@ class WebHelpers(object):
 
     def image_created(self, image):
         return datetime.datetime.fromtimestamp(
-            self.camera.stat_image(image).st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+            self.camera.stat_image(image).st_mtime).strftime('%H:%M:%S on %a, %d %b %Y')
+
+    def image_exif(self, image):
+        return self.camera.open_image_exif(image)
 
     def format_size(self, size, unit, precision=1, binary=False):
         prefixes = ('', 'k', 'M', 'G', 'T', 'P', 'E', 'Z')
