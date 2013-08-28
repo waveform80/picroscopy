@@ -22,12 +22,17 @@
       <div class="small-12 columns">
         <table tal:condition="camera and (req.params.get('show', 'grid') == 'table')">
           <thead>
-            <tr><th>Thumbnail</th><th>Filename</th><th>Size</th><th>Created</th></tr>
+            <tr>
+              <th>Thumbnail</th>
+              <th>Filename</th>
+              <th>Size</th>
+              <th>Created</th>
+            </tr>
           </thead>
           <tbody>
             <tr tal:repeat="image camera">
               <td>
-                <a href="${router.path_for('image', image=image)}">
+                <a href="${router.path_for('view', image=image)}">
                   <img width="200" src="${router.path_for('thumb', image=image)}" />
                 </a>
               </td>
@@ -40,7 +45,7 @@
         <ul class="gallery small-block-grid-2 large-block-grid-4"
             tal:condition="camera and (req.params.get('show', 'grid') == 'grid')">
           <li tal:repeat="image camera">
-          <a href="${router.path_for('image', image=image)}">
+          <a href="${router.path_for('view', image=image)}">
             <img src="${router.path_for('thumb', image=image)}" />
             <br />
             ${image}
@@ -53,24 +58,35 @@
     <div class="row">
       <div class="small-12 columns">
         <hr />
-        <div class="button-bar">
-          <ul class="button-group radius">
-            <li><a class="small button" href="${router.path_for('capture')}">Capture</a></li>
-            <li><a class="small button" href="${router.path_for('template', page='settings')}">Settings</a></li>
-          </ul>
-          <ul class="button-group radius" tal:condition="camera">
-            <li><a class="small button disabled" href="${router.path_for('delete')}">Delete Selected</a></li>
-            <li><a class="small button" href="${router.path_for('clear')}">Delete All</a></li>
-          </ul>
-        </div>
+        <span>
+          <a class="small button radius" href="${router.path_for('capture')}">
+            <span class="glyphicon glyphicon-camera"></span><br />
+            Capture <span class="hide-for-small">Image</span>
+          </a>
+          <a class="small button radius" href="${router.path_for('template', page='settings')}">
+            <span class="glyphicon glyphicon-cog"></span><br />
+            <span class="hide-for-small">Camera</span> Settings
+          </a>
+        </span>
+        <span class="right">
+          <a class="small button radius" href="${router.path_for('download')}">
+            <span class="glyphicon glyphicon-download"></span><br />
+            Download <span class="hide-for-small">Library</span>
+          </a>
+          <a class="small button radius" href="${router.path_for('send')}">
+            <span class="glyphicon glyphicon-send"></span><br />
+            Send <span class="hide-for-small">Library</span>
+          </a>
+          <a class="small button radius" href="${router.path_for('clear')}">
+            <span class="glyphicon glyphicon-trash"></span><br />
+            Clear <span class="hide-for-small">Library</span>
+          </a>
+        </span>
       </div>
     </div>
 
-    <div class="row" tal:condition="camera">
-      <div class="small-2 columns">
-        <a class="small button radius" href="${router.path_for('download')}">Download</a>
-      </div>
-      <div class="small-10 columns">
+    <!--div class="row" tal:condition="camera">
+      <div class="small-12 columns">
         <div class="row collapse">
           <form id="send-form" method="POST" action="${router.path_for('send')}">
             <div class="small-10 columns">
@@ -82,7 +98,7 @@
           </form>
         </div>
       </div>
-    </div>
+    </div-->
 
   </div>
 </div>

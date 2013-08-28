@@ -1,0 +1,31 @@
+<div metal:use-macro="layout['layout']" tal:define="title image">
+  <div metal:fill-slot="content" tal:omit-tag="">
+
+    <div class="row">
+      <div class="large-9 columns">
+        <img src="${router.path_for('image', image=image)}" />
+      </div>
+      <div class="large-3 columns">
+        <div class="show-for-small" style="height: 1em;"></div>
+        <table>
+          <tbody>
+            <tr><th>Size</th>   <td>${helpers.image_size(image)}</td></tr>
+            <tr><th>Created</th><td>${helpers.image_created(image)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="small-12 columns">
+        <hr />
+        <a class="small button radius" href="${router.path_for('delete', image=image)}">
+          <span class="glyphicon glyphicon-trash"></span><br />
+          Delete <span class="hide-for-small">Image</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+

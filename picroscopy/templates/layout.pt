@@ -7,13 +7,18 @@
   <title>Picroscopy - ${title}</title>
   <link rel="stylesheet" href="/static/foundation/css/foundation.css">
   <link rel="stylesheet" href="/static/picroscopy.css">
+  <link rel="stylesheet" href="/static/glyphicons.css">
   <script src="/static/foundation/js/vendor/custom.modernizr.js"></script>
 </head>
 <body>
 
   <div class="row">
     <div class="large-12 columns">
-      <h2>Picroscopy - ${title}</h2>
+      <h1><span tal:omit-tag="" tal:condition="page != 'library'">
+          <a href="${router.path_for('template', page='library')}">Library</a>
+          <span class="subheader">/</span>
+        </span>
+        ${title}</h1>
       <hr />
     </div>
   </div>

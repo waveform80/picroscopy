@@ -66,18 +66,19 @@ class PicroscopyWsgiApp(object):
         self.flashes = []
         self.router = PathRouter()
         self.router.add_routes([
-            url('/',                   self.do_template, kwargs={'page': 'index'}, name='home'),
+            url('/',                   self.do_template, kwargs={'page': 'library'}, name='home'),
             url('/{page}.html',        self.do_template, name='template'),
-            url('/config',             self.do_config,   name='config'),
-            url('/reset',              self.do_reset,    name='reset'),
-            url('/capture',            self.do_capture,  name='capture'),
-            url('/download',           self.do_download, name='download'),
-            url('/send',               self.do_send,     name='send'),
-            url('/delete',             self.do_delete,   name='delete'),
-            url('/clear',              self.do_clear,    name='clear'),
+            url('/view/{image}.html',  self.do_template, kwargs={'page': 'image'}, name='view'),
             url('/static/{path:any}',  self.do_static,   name='static'),
-            url('/images/{image}.jpg', self.do_image,    name='image'),
-            url('/thumbs/{image}.jpg', self.do_thumb,    name='thumb')
+            url('/images/{image}',     self.do_image,    name='image'),
+            url('/thumbs/{image}',     self.do_thumb,    name='thumb'),
+            url('/do/config',          self.do_config,   name='config'),
+            url('/do/reset',           self.do_reset,    name='reset'),
+            url('/do/capture',         self.do_capture,  name='capture'),
+            url('/do/download',        self.do_download, name='download'),
+            url('/do/send',            self.do_send,     name='send'),
+            url('/do/delete',          self.do_delete,   name='delete'),
+            url('/do/clear',           self.do_clear,    name='clear'),
             ])
 
     def __call__(self, environ, start_response):
@@ -220,7 +221,7 @@ class PicroscopyWsgiApp(object):
         resp.app_iter = FileWrapper(io.open(path, 'rb'))
         return resp
 
-    def do_template(self, req, page):
+    def do_template(self, req, page, image=None):
         """
         Serve a Chameleon template-based page
         """
@@ -233,6 +234,8 @@ class PicroscopyWsgiApp(object):
             self.not_found(req)
         resp.text = template(
             req=req,
+            page=page,
+            image=image,
             helpers=self.helpers,
             layout=self.layout,
             flashes=self.flashes,

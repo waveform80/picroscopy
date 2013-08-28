@@ -171,14 +171,20 @@
       </div>
 
       <div class="row">
-        <div class="small-9 columns">
-          <ul class="button-group radius">
-            <li><a class="small button" href="#" onclick="document.forms[0].submit(); return false;">Update</a></li>
-            <li><a class="small button" href="${router.path_for('reset')}">Defaults</a></li>
-          </ul>
-        </div>
-        <div class="small-3 columns">
-          <a class="right small secondary button radius" href="${router.path_for('home')}">Cancel</a>
+        <div class="small-12 columns">
+          <hr />
+          <span>
+            <a class="small button radius" href="#" onclick="document.forms[0].submit(); return false;">
+              <span class="glyphicon glyphicon-ok-circle"></span><br />
+              Apply <span class="hide-for-small">Settings</span>
+            </a>
+          </span>
+          <span class="right">
+            <a class="small button radius" href="${router.path_for('reset')}">
+              <span class="glyphicon glyphicon-remove-circle"></span><br />
+              Reset <span class="hide-for-small">to Defaults</span>
+            </a>
+          </span>
         </div>
       </div>
 
