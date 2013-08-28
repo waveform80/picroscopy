@@ -19,7 +19,7 @@
     <div class="row">
       <div class="small-12 columns">
         <hr />
-        <a class="small button radius" href="${router.path_for('delete', image=image)}">
+        <a class="small button radius confirmation" href="${router.path_for('delete', image=image)}">
           <span class="glyphicon glyphicon-trash"></span><br />
           Delete <span class="hide-for-small">Image</span>
         </a>

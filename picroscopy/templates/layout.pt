@@ -12,19 +12,20 @@
 </head>
 <body>
 
+  <header>
   <div class="row">
-    <div class="large-12 columns">
+    <div class="small-12 columns">
       <h1><span tal:omit-tag="" tal:condition="page != 'library'">
           <a href="${router.path_for('template', page='library')}">Library</a>
           <span class="subheader">/</span>
         </span>
         ${title}</h1>
-      <hr />
     </div>
   </div>
+  </header>
 
   <div class="row" tal:condition="flashes">
-    <div class="large-12 columns">
+    <div class="small-12 columns">
       <div data-alert class="alert-box secondary radius" tal:repeat="flash flashes">
         ${flash} <a href="#" class="close">&times;</a>
       </div>
@@ -33,8 +34,25 @@
 
   <div metal:define-slot="content"></div>
 
+  <footer>
+  <div class="row">
+    <div class="small-12 columns">
+      Picroscopy is copyright &copy; 2013 <a
+        href="mailto:dave@waveform.org.uk">Dave Jones</a> and <a
+        href="mailto:smeghead.h@gmail.com">Holly Jones</a>. <a
+        href="https://github.com/waveform80/picroscopy/">Source code</a> is
+      available from GitHub, licensed under the <a
+        href="http://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3</a>. <a
+        href="http://glyphicons.com/">Glyphicons</a> Halfings used under the
+      terms of the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache
+        License v2.0</a>.
+    </div>
+  </div>
+  </footer>
+
   <script src="/static/foundation/js/vendor/jquery.js"></script>
   <script src="/static/foundation/js/foundation.min.js"></script>
   <script>$(document).foundation();</script>
+  <script src="/static/picroscopy.js"></script>
 </body>
 </html></div>

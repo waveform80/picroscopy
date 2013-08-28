@@ -72,13 +72,13 @@ class PicroscopyWsgiApp(object):
             url('/static/{path:any}',  self.do_static,   name='static'),
             url('/images/{image}',     self.do_image,    name='image'),
             url('/thumbs/{image}',     self.do_thumb,    name='thumb'),
-            url('/do/config',          self.do_config,   name='config'),
-            url('/do/reset',           self.do_reset,    name='reset'),
-            url('/do/capture',         self.do_capture,  name='capture'),
-            url('/do/download',        self.do_download, name='download'),
-            url('/do/send',            self.do_send,     name='send'),
-            url('/do/delete',          self.do_delete,   name='delete'),
-            url('/do/clear',           self.do_clear,    name='clear'),
+            url('/delete/{image}',     self.do_delete,   name='delete'),
+            url('/config',             self.do_config,   name='config'),
+            url('/reset',              self.do_reset,    name='reset'),
+            url('/capture',            self.do_capture,  name='capture'),
+            url('/download',           self.do_download, name='download'),
+            url('/send',               self.do_send,     name='send'),
+            url('/clear',              self.do_clear,    name='clear'),
             ])
 
     def __call__(self, environ, start_response):
@@ -111,7 +111,7 @@ class PicroscopyWsgiApp(object):
         self.camera.reset()
         self.camera.restart()
         self.flashes.append('Camera settings reset to defaults')
-        raise exc.HTTPFound(location=self.router.path_for('home'))
+        raise exc.HTTPFound(location=self.router.path_for('template', page='library'))
 
     def do_config(self, req):
         """
@@ -137,14 +137,14 @@ class PicroscopyWsgiApp(object):
             return self.do_template(req, 'settings')
         self.camera.restart()
         self.flashes.append('Camera settings updated')
-        raise exc.HTTPFound(location=self.router.path_for('home'))
+        raise exc.HTTPFound(location=self.router.path_for('template', page='library'))
 
     def do_capture(self, req):
         """
         Take a new image with the camera and add it to the library
         """
         self.camera.capture()
-        raise exc.HTTPFound(location=self.router.path_for('home'))
+        raise exc.HTTPFound(location=self.router.path_for('template', page='library'))
 
     def do_download(self, req):
         """
@@ -166,20 +166,21 @@ class PicroscopyWsgiApp(object):
         """
         self.camera.email(req.params['email'])
         self.flashes.append('Email sent to %s' % req.params['email'])
-        raise exc.HTTPFound(location=self.router.path_for('home'))
+        raise exc.HTTPFound(location=self.router.path_for('template', page='library'))
 
-    def do_delete(self, req):
+    def do_delete(self, req, image):
         """
         Delete the selected images from camera library
         """
-        raise NotImplementedError
+        self.camera.remove(image)
+        raise exc.HTTPFound(location=self.router.path_for('template', page='library'))
 
     def do_clear(self, req):
         """
         Clear the camera library of all images
         """
         self.camera.clear()
-        raise exc.HTTPFound(location=self.router.path_for('home'))
+        raise exc.HTTPFound(location=self.router.path_for('template', page='library'))
 
     def do_image(self, req, image):
         """

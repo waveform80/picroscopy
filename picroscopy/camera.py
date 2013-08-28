@@ -107,6 +107,7 @@ class PicroscopyCamera(object):
     def __init__(self, **kwargs):
         super().__init__()
         global USE_GSTREAMER, RASPIVID, RASPISTILL
+        self.counter = 1
         self.images_dir = kwargs.get(
             'images_dir', os.path.join(HERE, 'data', 'images'))
         self.thumbs_dir = kwargs.get(
@@ -274,14 +275,13 @@ class PicroscopyCamera(object):
     def capture(self):
         # Safely allocate a new filename for the image
         d = datetime.datetime.now().strftime('%Y%m%d')
-        i = 1
         while True:
-            filename = os.path.join(self.images_dir, 'PIC-%s-%04d.jpg' % (d, i))
+            filename = os.path.join(self.images_dir, 'PIC-%s-%04d.jpg' % (d, self.counter))
             try:
                 # XXX mode 'x' is only available in Py3.3+
                 fd = os.open(filename, os.O_CREAT | os.O_EXCL)
             except OSError:
-                i += 1
+                self.counter += 1
             else:
                 os.close(fd)
                 break
@@ -301,6 +301,7 @@ class PicroscopyCamera(object):
     def clear(self):
         for f in self:
             self.remove(f)
+        self.counter = 1
 
     def archive(self):
         data = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)

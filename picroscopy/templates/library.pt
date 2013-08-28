@@ -68,7 +68,7 @@
             <span class="hide-for-small">Camera</span> Settings
           </a>
         </span>
-        <span class="right">
+        <span class="right" tal:condition="camera">
           <a class="small button radius" href="${router.path_for('download')}">
             <span class="glyphicon glyphicon-download"></span><br />
             Download <span class="hide-for-small">Library</span>
@@ -77,7 +77,7 @@
             <span class="glyphicon glyphicon-send"></span><br />
             Send <span class="hide-for-small">Library</span>
           </a>
-          <a class="small button radius" href="${router.path_for('clear')}">
+          <a class="small button radius confirmation" href="${router.path_for('clear')}">
             <span class="glyphicon glyphicon-trash"></span><br />
             Clear <span class="hide-for-small">Library</span>
           </a>
