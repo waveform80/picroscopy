@@ -104,7 +104,7 @@ def capture_image(dest, settings):
                     RASPISTILL,
                     '-t', '2000', # Allow 2 seconds for calibration
                     '-o', dest,
-                    ] + raspi_settings(settings)
+                    ] + raspi_settings(settings, exif=True)
             p = subprocess.Popen(cmdline)
             p.communicate()
         finally:
@@ -138,7 +138,6 @@ class PicroscopyCamera(object):
     def __init__(self, **kwargs):
         super().__init__()
         global USE_GSTREAMER, RASPIVID, RASPISTILL
-        self.counter = 1
         self.images_dir = kwargs.get(
             'images_dir', os.path.join(HERE, 'data', 'images'))
         self.thumbs_dir = kwargs.get(
@@ -208,6 +207,7 @@ class PicroscopyCamera(object):
         self._artist = ''
         self._email = ''
         self._copyright = ''
+        self.counter = 1
 
     def _get_sharpness(self):
         return self._sharpness
@@ -370,7 +370,6 @@ class PicroscopyCamera(object):
     def clear(self):
         for f in self:
             self.remove(f)
-        self.counter = 1
 
     def archive(self):
         data = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)
