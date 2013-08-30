@@ -13,6 +13,7 @@ from email.mime.image import MIMEImage
 
 from PIL import Image
 
+from picroscopy import __version__
 from picroscopy.exif import format_exif
 
 
@@ -25,8 +26,8 @@ RASPIVID = '/usr/bin/raspivid'
 RASPISTILL = '/usr/bin/raspistill'
 
 
-def raspi_settings(settings):
-    return [
+def raspi_settings(settings, exif=False):
+    result = [
         '--sharpness',  str(settings.sharpness),
         '--contrast',   str(settings.contrast),
         '--brightness', str(settings.brightness),
@@ -36,10 +37,30 @@ def raspi_settings(settings):
         '--exposure',   settings.exposure,
         '--metering',   settings.metering,
         '--awb',        settings.white_balance,
-        ] + \
-        (['--vstab'] if settings.vstab else []) + \
-        (['--hflip'] if settings.hflip else []) + \
-        (['--vflip'] if settings.vflip else [])
+        ]
+    if settings.vstab:
+        result.append('--vstab')
+    if settings.hflip:
+        result.append('--hflip')
+    if settings.vflip:
+        result.append('--vflip')
+    if exif:
+        if settings.artist and settings.email:
+            artist = '%s <%s>' % settings.artist
+        else:
+            artist = settings.artist
+        if settings.software:
+            result.extend(['-x', 'IFD0.Software=%s' % settings.software])
+        if artist:
+            result.extend(['-x', 'IFD0.Artist=Photographer, %s' % artist])
+        if settings.copyright:
+            result.extend(['-x', 'IFD0.Copyright=%s' % settings.copyright])
+        elif settings.artist:
+            result.extend(['-x', 'IFD0.Copyright=Copyright, %s, %d' % (
+                artist, datetime.date.today().year)])
+        if settings.description:
+            result.extend(['-x', 'IFD0.ImageDescription=%s' % settings.description])
+    return result
 
 def start_preview(settings):
     global PREVIEW_PROCESS
@@ -105,6 +126,13 @@ def str_property(value, valid, name):
         raise ValueError('Invalid %s: %s' % (name, value))
     return value
 
+def ascii_property(value, name):
+    try:
+        value.encode('ascii')
+    except UnicodeEncodeError:
+        raise ValueError('Non-ASCII characters not permitted in %s' % name)
+    return value
+
 
 class PicroscopyCamera(object):
     def __init__(self, **kwargs):
@@ -128,7 +156,8 @@ class PicroscopyCamera(object):
         USE_GSTREAMER = kwargs.get('gstreamer', False)
         RASPIVID = kwargs.get('raspivid', '/usr/bin/raspivid')
         RASPISTILL = kwargs.get('raspistill', '/usr/bin/raspistill')
-        self.reset()
+        self.camera_reset()
+        self.user_reset()
         start_preview(self)
 
     def close(self):
@@ -159,7 +188,7 @@ class PicroscopyCamera(object):
             os.path.exists(os.path.join(self.images_dir, value))
             )
 
-    def reset(self):
+    def camera_reset(self):
         self._sharpness = 0
         self._contrast = 0
         self._brightness = 50
@@ -172,6 +201,13 @@ class PicroscopyCamera(object):
         self._exposure = 'auto'
         self._white_balance = 'auto'
         self._metering = 'average'
+        self._software = 'Picroscopy %s' % __version__
+
+    def user_reset(self):
+        self._description = ''
+        self._artist = ''
+        self._email = ''
+        self._copyright = ''
 
     def _get_sharpness(self):
         return self._sharpness
@@ -275,6 +311,36 @@ class PicroscopyCamera(object):
         self._vflip = bool_property(value, 'Vertical flip')
     vflip = property(_get_vflip, _set_vflip)
 
+    def _get_description(self):
+        return self._description
+    def _set_description(self, value):
+        self._description = ascii_property(value, 'Description')
+    description = property(_get_description, _set_description)
+
+    def _get_artist(self):
+        return self._artist
+    def _set_artist(self, value):
+        self._artist = ascii_property(value, 'Photographer')
+    artist = property(_get_artist, _set_artist)
+
+    def _get_email(self):
+        return self._email
+    def _set_email(self, value):
+        self._email = ascii_property(value, 'Email')
+    email = property(_get_email, _set_email)
+
+    def _get_copyright(self):
+        return self._copyright
+    def _set_copyright(self, value):
+        self._copyright = ascii_property(value, 'Copyright')
+    copyright = property(_get_copyright, _set_copyright)
+
+    def _get_software(self):
+        return self._software
+    def _set_software(self, value):
+        self._software = ascii_property(value, 'Software')
+    software = property(_get_software, _set_software)
+
     def capture(self):
         # Safely allocate a new filename for the image
         d = datetime.datetime.now().strftime('%Y%m%d')
@@ -315,7 +381,11 @@ class PicroscopyCamera(object):
         data.seek(0)
         return data
 
-    def email(self, address):
+    def send(self, address=None):
+        if address is None:
+            address = self.email
+        if not address:
+            raise ValueError('No e-mail address specified')
         # Construct the multi-part email message
         msg = MIMEMultipart()
         msg['From'] = self.email_from

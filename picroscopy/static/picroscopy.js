@@ -1,3 +1,7 @@
 $('.confirmation').on('click', function() {
-  return confirm('Are you sure?');
+  if ($(this).attr('data-confirm'))
+    return confirm($(this).attr('data-confirm'));
+  else
+    return confirm('Are you sure?');
 });
+

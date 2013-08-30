@@ -3,8 +3,15 @@ Some rudimentary EXIF handling, specifically those tags that are used by
 raspistill.
 """
 
-ISO = 34855
+CAMERA_MAKE   = 271
+CAMERA_MODEL  = 272
+SOFTWARE      = 305
+ARTIST        = 315
+COPYRIGHT     = 33432
+F_NUMBER      = 33437
+ISO           = 34855
 EXPOSURE_TIME = 33434
+FOCAL_LENGTH  = 37386
 
 EXPOSURE_MODE = 41986
 EXPOSURE_MODES = {
@@ -45,21 +52,35 @@ METERING_MODES = {
     }
 
 TAG_NAMES = {
+    ARTIST:           'Artist',
+    COPYRIGHT:        'Copyright',
+    SOFTWARE:         'Software',
+    CAMERA_MAKE:      'Camera Make',
+    CAMERA_MODEL:     'Camera Model',
+    F_NUMBER:         'F-Number',
     EXPOSURE_MODE:    'Exposure Mode',
     EXPOSURE_PROGRAM: 'Exposure Program',
     EXPOSURE_TIME:    'Exposure Time',
     METERING_MODE:    'Metering Mode',
     WHITE_BALANCE:    'White Balance',
     ISO:              'ISO',
+    FOCAL_LENGTH:     'Focal Length',
     }
 
 TAG_VALUES = {
+    ARTIST:           lambda v: v,
+    COPYRIGHT:        lambda v: v,
+    SOFTWARE:         lambda v: v,
+    CAMERA_MAKE:      lambda v: v,
+    CAMERA_MODEL:     lambda v: v,
+    F_NUMBER:         lambda v: '%.1f' % (v[0]/v[1]),
     EXPOSURE_MODE:    lambda v: EXPOSURE_MODES.get(v, 'Unknown'),
     EXPOSURE_PROGRAM: lambda v: EXPOSURE_PROGRAMS.get(v, 'Unknown'),
     EXPOSURE_TIME:    lambda v: '1/%ds' % (0.5 + v[1]/v[0]),
     METERING_MODE:    lambda v: METERING_MODES.get(v, 'Unknown'),
     WHITE_BALANCE:    lambda v: WHITE_BALANCES.get(v, 'Unknown'),
     ISO:              lambda v: str(v),
+    FOCAL_LENGTH:     lambda v: '%.1fmm' % (v[0]/v[1]),
     }
 
 def format_exif(data):

@@ -59,46 +59,36 @@
       <div class="small-12 columns">
         <hr />
         <span>
-          <a class="small button radius" href="${router.path_for('capture')}">
+          <a class="small button radius ${'disabled' if not camera.artist else ''}" href="${router.path_for('capture')}">
             <span class="glyphicon glyphicon-camera"></span><br />
             Capture <span class="hide-for-small">Image</span>
           </a>
           <a class="small button radius" href="${router.path_for('template', page='settings')}">
             <span class="glyphicon glyphicon-cog"></span><br />
-            <span class="hide-for-small">Camera</span> Settings
+            <span class="hide-for-small">System</span> Settings
           </a>
         </span>
         <span class="right">
-          <a class="small button radius ${'disabled' if not camera else ''}" href="${router.path_for('download')}">
+          <a class="small button radius ${'disabled' if not camera else ''}"
+            href="${router.path_for('download')}">
             <span class="glyphicon glyphicon-download"></span><br />
             Download <span class="hide-for-small">Library</span>
           </a>
-          <a class="small button radius ${'disabled' if not camera else ''}" href="${router.path_for('send')}">
+          <a class="small button radius ${'disabled' if not (camera and camera.email) else ''} confirmation"
+            data-confirm="Are you sure you wish to send the entire library to ${camera.email}?"
+            href="${router.path_for('send')}">
             <span class="glyphicon glyphicon-send"></span><br />
             Send <span class="hide-for-small">Library</span>
           </a>
-          <a class="small button radius ${'disabled' if not camera else ''} confirmation" href="${router.path_for('clear')}">
-            <span class="glyphicon glyphicon-trash"></span><br />
-            Clear <span class="hide-for-small">Library</span>
+          <a class="small button radius ${'disabled' if not camera else ''} confirmation"
+            data-confirm="This will wipe the library and reset all settings. Are you sure?"
+            href="${router.path_for('logout')}">
+            <span class="glyphicon glyphicon-remove-circle"></span><br />
+            Finish <span class="hide-for-small">and Logout</span>
           </a>
         </span>
       </div>
     </div>
-
-    <!--div class="row" tal:condition="camera">
-      <div class="small-12 columns">
-        <div class="row collapse">
-          <form id="send-form" method="POST" action="${router.path_for('send')}">
-            <div class="small-10 columns">
-              <input type="email" name="email" placeholder="E-mail address" />
-            </div>
-            <div class="small-2 columns">
-              <a class="postfix small button radius" href="#" onclick="document.getElementById('send-form').submit(); return false;">Send</a>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div-->
 
   </div>
 </div>

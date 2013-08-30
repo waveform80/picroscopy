@@ -54,5 +54,7 @@
   <script src="/static/foundation/js/foundation.min.js"></script>
   <script>$(document).foundation();</script>
   <script src="/static/picroscopy.js"></script>
+
+  <div metal:define-slot="scripts"></div>
 </body>
 </html></div>

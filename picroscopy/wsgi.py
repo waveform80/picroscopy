@@ -6,6 +6,7 @@ import logging
 import mimetypes
 import datetime
 from wsgiref.util import FileWrapper
+from operator import itemgetter
 
 from webob import Request, Response, exc
 from chameleon import PageTemplateLoader
@@ -29,7 +30,11 @@ class WebHelpers(object):
             self.camera.stat_image(image).st_mtime).strftime('%H:%M:%S on %a, %d %b %Y')
 
     def image_exif(self, image):
-        return self.camera.open_image_exif(image)
+        exif_data = self.camera.open_image_exif(image)
+        return sorted(
+            ((title, value) for (title, value) in exif_data.items()),
+            key=itemgetter(0)
+            )
 
     def format_size(self, size, unit, precision=1, binary=False):
         prefixes = ('', 'k', 'M', 'G', 'T', 'P', 'E', 'Z')
@@ -81,7 +86,7 @@ class PicroscopyWsgiApp(object):
             url('/capture',            self.do_capture,  name='capture'),
             url('/download',           self.do_download, name='download'),
             url('/send',               self.do_send,     name='send'),
-            url('/clear',              self.do_clear,    name='clear'),
+            url('/logout',             self.do_logout,   name='logout'),
             ])
 
     def __call__(self, environ, start_response):
@@ -111,43 +116,62 @@ class PicroscopyWsgiApp(object):
         """
         Reset the camera settings to their defaults
         """
-        self.camera.reset()
+        self.camera.camera_reset()
         self.camera.restart()
         self.flashes.append('Camera settings reset to defaults')
-        raise exc.HTTPFound(location=self.router.path_for('template', page='library'))
+        raise exc.HTTPFound(
+            location=self.router.path_for('template', page='library'))
 
     def do_config(self, req):
         """
         Configure the camera settings
         """
-        for setting in ('sharpness', 'contrast', 'brightness', 'saturation', 'ISO', 'evcomp'):
+        for setting in (
+                'sharpness', 'contrast', 'brightness', 'saturation', 'ISO',
+                'evcomp'):
             try:
-                setattr(self.camera, setting.replace('-', '_'), int(req.params[setting]))
+                setattr(
+                    self.camera, setting.replace('-', '_'),
+                    int(req.params[setting])
+                    )
             except ValueError:
-                self.flashes.append('Invalid %s: %s' % (setting, req.params[setting]))
+                self.flashes.append(
+                    'Invalid %s: %s' % (setting, req.params[setting]))
         for setting in ('vstab', 'hflip', 'vflip'):
             try:
-                setattr(self.camera, setting.replace('-', '_'), req.params.get(setting, '0'))
+                setattr(
+                    self.camera, setting.replace('-', '_'),
+                    req.params.get(setting, '0')
+                    )
             except ValueError:
-                self.flashes.append('Invalid %s: %s' % (setting, req.params[setting]))
-        for setting in ('metering', 'white-balance', 'exposure'):
+                self.flashes.append(
+                    'Invalid %s: %s' % (setting, req.params[setting]))
+        for setting in (
+                'metering', 'white-balance', 'exposure', 'artist', 'email',
+                'copyright', 'description'):
             try:
-                setattr(self.camera, setting.replace('-', '_'), req.params[setting])
+                setattr(
+                    self.camera, setting.replace('-', '_'),
+                    req.params[setting]
+                    )
             except ValueError:
-                self.flashes.append('Invalid %s: %s' % (setting, req.params[setting]))
+                self.flashes.append(
+                    'Invalid %s: %s' % (setting, req.params[setting]))
         # If any settings failed, re-render the settings form
         if self.flashes:
             return self.do_template(req, 'settings')
         self.camera.restart()
         self.flashes.append('Camera settings updated')
-        raise exc.HTTPFound(location=self.router.path_for('template', page='library'))
+        raise exc.HTTPFound(
+            location=self.router.path_for('template', page='library'))
 
     def do_capture(self, req):
         """
         Take a new image with the camera and add it to the library
         """
         self.camera.capture()
-        raise exc.HTTPFound(location=self.router.path_for('template', page='library'))
+        raise exc.HTTPFound(
+            location=self.router.path_for('template', page='library'))
 
     def do_download(self, req):
         """
@@ -167,23 +191,29 @@ class PicroscopyWsgiApp(object):
         """
         Send the camera library as a set of attachments to an email
         """
-        self.camera.email(req.params['email'])
-        self.flashes.append('Email sent to %s' % req.params['email'])
-        raise exc.HTTPFound(location=self.router.path_for('template', page='library'))
+        self.camera.send()
+        self.flashes.append('Email sent to %s' % camera.email)
+        raise exc.HTTPFound(
+            location=self.router.path_for('template', page='library'))
 
     def do_delete(self, req, image):
         """
         Delete the selected images from camera library
         """
         self.camera.remove(image)
-        raise exc.HTTPFound(location=self.router.path_for('template', page='library'))
+        raise exc.HTTPFound(
+            location=self.router.path_for('template', page='library'))
 
-    def do_clear(self, req):
+    def do_logout(self, req):
         """
-        Clear the camera library of all images
+        Clear the camera library of all images, reset all settings
         """
         self.camera.clear()
-        raise exc.HTTPFound(location=self.router.path_for('template', page='library'))
+        self.camera.user_reset()
+        self.camera.camera_reset()
+        self.camera.restart()
+        raise exc.HTTPFound(
+            location=self.router.path_for('template', page='settings'))
 
     def do_image(self, req, image):
         """
