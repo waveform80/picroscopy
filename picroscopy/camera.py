@@ -102,7 +102,7 @@ def capture_image(dest, settings):
             else:
                 cmdline = [
                     RASPISTILL,
-                    '-t', '2',
+                    '-t', '2000', # Allow 2 seconds for calibration
                     '-o', dest,
                     ] + raspi_settings(settings)
             p = subprocess.Popen(cmdline)
