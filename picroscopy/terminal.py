@@ -6,6 +6,7 @@ import logging
 import argparse
 import subprocess
 import locale
+import configparser
 from wsgiref.simple_server import make_server
 
 from picroscopy import __version__
@@ -82,6 +83,9 @@ class PicroscopyConsoleApp(object):
             )
         self.parser.add_argument('--version', action='version',
             version=__version__)
+        self.parser.add_argument(
+            '-c', '--config', dest='config', action='store',
+            help='specify the configuration file to load')
         self.parser.add_argument(
             '-q', '--quiet', dest='log_level', action='store_const',
             const=logging.ERROR, help='produce less console output')

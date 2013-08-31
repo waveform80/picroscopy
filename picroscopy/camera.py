@@ -207,6 +207,7 @@ class PicroscopyCamera(object):
         self._artist = ''
         self._email = ''
         self._copyright = ''
+        self._filename_template = 'pic-{date:%Y%m%d}-{counter:05d}.jpg'
         self.counter = 1
 
     def _get_sharpness(self):
@@ -341,11 +342,24 @@ class PicroscopyCamera(object):
         self._software = ascii_property(value, 'Software')
     software = property(_get_software, _set_software)
 
+    def _get_filename_template(self):
+        return self._filename_template
+    def _set_filename_template(self, value):
+        try:
+            value.format(counter=1, date=datetime.datetime.now())
+        except KeyError as e:
+            raise ValueError('Unknown value %s in template' % e)
+        self._filename_template = value
+    filename_template = property(_get_filename_template, _set_filename_template)
+
     def capture(self):
         # Safely allocate a new filename for the image
-        d = datetime.datetime.now().strftime('%Y%m%d')
+        date = datetime.datetime.now()
         while True:
-            filename = os.path.join(self.images_dir, 'PIC-%s-%04d.jpg' % (d, self.counter))
+            filename = os.path.join(
+                self.images_dir,
+                self.filename_template.format(date=date, counter=self.counter)
+                )
             try:
                 # XXX mode 'x' is only available in Py3.3+
                 fd = os.open(filename, os.O_CREAT | os.O_EXCL)

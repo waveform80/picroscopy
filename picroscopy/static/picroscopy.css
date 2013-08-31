@@ -25,3 +25,6 @@ form input[type="range"] {
     width: 100%;
 }
 
+.advanced {
+    display: none;
+}

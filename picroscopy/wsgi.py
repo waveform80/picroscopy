@@ -148,7 +148,7 @@ class PicroscopyWsgiApp(object):
                     'Invalid %s: %s' % (setting, req.params[setting]))
         for setting in (
                 'metering', 'white-balance', 'exposure', 'artist', 'email',
-                'copyright', 'description'):
+                'copyright', 'description', 'filename-template'):
             try:
                 setattr(
                     self.camera, setting.replace('-', '_'),

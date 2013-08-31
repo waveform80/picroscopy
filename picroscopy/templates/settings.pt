@@ -53,6 +53,17 @@
               </div>
             </div>
 
+            <div class="row advanced">
+              <div class="small-3 columns">
+                <label for="filename-template" class="right inline">Filename Template</label>
+              </div>
+              <div class="small-9 columns">
+                <input type="text" id="filename-template" name="filename-template"
+                  required placeholder="pic-{counter}.jpg"
+                  value="${camera.filename_template}" />
+              </div>
+            </div>
+
           </fieldset>
 
           <fieldset>
@@ -106,7 +117,7 @@
               <div class="small-2 columns">+100</div>
             </div>
 
-            <div class="row">
+            <div class="row advanced">
               <div class="small-3 columns">
                 <label for="evcomp" class="right inline">EV Compensation</label>
               </div>
@@ -175,7 +186,7 @@
               </div>
             </div>
 
-            <div class="row">
+            <div class="row advanced">
               <div class="small-3 columns">
                 <label for="metering" class="right inline">Metering</label>
               </div>
@@ -189,7 +200,7 @@
               </div>
             </div>
 
-            <div class="row">
+            <div class="row advanced">
               <div class="small-3 columns">
                 &nbsp;
               </div>
@@ -240,6 +251,10 @@
             </button>
           </span>
           <span class="right">
+            <a class="small button radius" id="toggle-advanced" href="#">
+              <span class="glyphicon glyphicon-eye-close"></span><br />
+              <span class="hide-for-small">Toggle</span> Advanced
+            </a>
             <a class="small button radius" href="${router.path_for('reset')}">
               <span class="glyphicon glyphicon-remove-circle"></span><br />
               Reset <span class="hide-for-small">to Defaults</span>
@@ -262,6 +277,11 @@
           "Copyright " + year + ", " + artist +
           (email ? " <" + email + ">" : "") +
           ". All rights reserved.";
+      });
+
+      $("#toggle-advanced").click(function() {
+        $(".advanced").slideToggle();
+        return false;
       });
     </script>
   </div>

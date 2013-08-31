@@ -33,7 +33,7 @@
             <tr tal:repeat="image camera">
               <td>
                 <a href="${router.path_for('view', image=image)}">
-                  <img width="200" src="${router.path_for('thumb', image=image)}" />
+                  <img class="th" width="200" src="${router.path_for('thumb', image=image)}" />
                 </a>
               </td>
               <td>${image}</td>
@@ -46,7 +46,7 @@
             tal:condition="camera and (req.params.get('show', 'grid') == 'grid')">
           <li tal:repeat="image camera">
           <a href="${router.path_for('view', image=image)}">
-            <img src="${router.path_for('thumb', image=image)}" />
+            <img class="th" src="${router.path_for('thumb', image=image)}" />
             <br />
             ${image}
           </a>
@@ -87,6 +87,18 @@
             Finish <span class="hide-for-small">and Logout</span>
           </a>
         </span>
+      </div>
+    </div>
+
+    <div class="row" tal:condition="not camera.artist">
+      <div class="small-12 columns">
+        <div class="panel radius">
+          <h6>Login</h6>
+          <p>To enable the Capture button, please visit the <a
+            href="${router.path_for('template', page='settings')}">Settings</a>
+          page and enter your name (and any other optional details you wish to
+          use when tagging captured images).</p>
+        </div>
       </div>
     </div>
 
