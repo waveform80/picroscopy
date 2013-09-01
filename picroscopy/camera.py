@@ -76,12 +76,14 @@ def start_preview(settings):
                     ]
             else:
                 cmdline = [RASPIVID, '-t', '0'] + raspi_settings(settings)
+            logging.debug('Executing %s', cmdline)
             PREVIEW_PROCESS = subprocess.Popen(cmdline)
 
 def stop_preview():
     global PREVIEW_PROCESS
     with CAMERA_LOCK:
         if PREVIEW_PROCESS:
+            logging.debug('Terminating preview process')
             PREVIEW_PROCESS.terminate()
             PREVIEW_PROCESS.wait()
             PREVIEW_PROCESS = None
@@ -105,6 +107,7 @@ def capture_image(dest, settings):
                     '-t', '2000', # Allow 2 seconds for calibration
                     '-o', dest,
                     ] + raspi_settings(settings, exif=True)
+            logging.debug('Executing %s', cmdline)
             p = subprocess.Popen(cmdline)
             p.communicate()
         finally:
@@ -138,16 +141,16 @@ class PicroscopyCamera(object):
     def __init__(self, **kwargs):
         super().__init__()
         global USE_GSTREAMER, RASPIVID, RASPISTILL
-        self.images_dir = kwargs.get(
-            'images_dir', os.path.join(HERE, 'data', 'images'))
-        self.thumbs_dir = kwargs.get(
-            'thumbs_dir', os.path.join(HERE, 'data', 'thumbs'))
-        if not os.path.exists(self.images_dir):
-            raise ValueError(
-                'The images directory %s does not exist' % self.images_dir)
-        if not os.path.exists(self.thumbs_dir):
-            raise ValueError(
-                'The thumbnails directory %s does not exist' % self.thumbs_dir)
+        self.images_tmp = tempfile.mkdtemp(dir=os.environ.get('TEMP', '/tmp'))
+        self.thumbs_tmp = tempfile.mkdtemp(dir=os.environ.get('TEMP', '/tmp'))
+        self.images_dir = os.path.abspath(os.path.normpath(kwargs.get(
+            'images_dir', self.images_tmp)))
+        self.thumbs_dir = os.path.abspath(os.path.normpath(kwargs.get(
+            'thumbs_dir', self.thumbs_tmp)))
+        logging.info('Using %s for images' % self.images_dir)
+        logging.info('Using %s for thumbnails' % self.thumbs_dir)
+        os.makedirs(self.images_dir, exist_ok=True)
+        os.makedirs(self.thumbs_dir, exist_ok=True)
         self.thumbs_size = kwargs.get('thumbs_size', (320, 320))
         self.email_from = kwargs.get('email_from', 'picroscopy')
         self.sendmail = kwargs.get('sendmail', '/usr/sbin/sendmail')
@@ -161,6 +164,10 @@ class PicroscopyCamera(object):
 
     def close(self):
         stop_preview()
+        if self.images_dir == self.images_tmp:
+            self.clear()
+        os.rmdir(self.images_tmp)
+        os.rmdir(self.thumbs_tmp)
 
     def restart(self):
         stop_preview()
