@@ -59,10 +59,6 @@ PACKAGES = [
     ]
 
 PACKAGE_DATA = {
-    'picroscopy': [
-        os.path.join('templates', '*.pt'),
-        os.path.join('static', '*'),
-        ]
     }
 
 
@@ -98,6 +94,7 @@ def main():
         keywords             = ' '.join(KEYWORDS),
         packages             = PACKAGES,
         package_data         = PACKAGE_DATA,
+        include_package_data = True,
         platforms            = 'ALL',
         install_requires     = REQUIRES,
         extras_require       = EXTRA_REQUIRES,

@@ -1,0 +1,8 @@
+prune debian
+prune docs
+prune etc
+include README.rst
+include LICENSE.txt
+include utils.py
+recursive-include picroscopy/templates *.pt
+recursive-include picroscopy/static *
