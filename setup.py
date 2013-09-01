@@ -59,6 +59,10 @@ PACKAGES = [
     ]
 
 PACKAGE_DATA = {
+    'picroscopy': [
+        os.path.join('templates', '*.pt'),
+        os.path.join('static', '*'),
+        ]
     }
 
 

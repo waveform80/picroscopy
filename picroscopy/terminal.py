@@ -62,25 +62,10 @@ class PicroscopyConsoleApp(object):
         super().__init__()
         self.parser = argparse.ArgumentParser(
             description=__doc__,
-        )
-        self.parser.set_defaults(
-            debug=False,
-            gstreamer=False,
-            log_level=logging.WARNING,
-            log_file=None,
-            daemon=False,
-            listen='0.0.0.0:80',
-            thumbs_size='320x320',
-            thumbs_dir=os.path.join(HERE, 'data', 'thumbs'),
-            images_dir=os.path.join(HERE, 'data', 'images'),
-            templates_dir=os.path.join(HERE, 'templates'),
-            static_dir=os.path.join(HERE, 'static'),
-            sendmail='/usr/sbin/sendmail',
-            smtp_server='',
-            email_from='picroscopy',
-            raspivid='/usr/bin/raspivid',
-            raspistill='/usr/bin/raspistill',
+            # suppress creation of unspecified attributes
+            argument_default=argparse.SUPPRESS
             )
+        self.parser.set_defaults(log_level=logging.WARNING)
         self.parser.add_argument('--version', action='version',
             version=__version__)
         self.parser.add_argument(
@@ -93,55 +78,44 @@ class PicroscopyConsoleApp(object):
             '-v', '--verbose', dest='log_level', action='store_const',
             const=logging.INFO, help='produce more console output')
         self.parser.add_argument(
-            '-l', '--log-file', dest='log_file', metavar='FILE',
+            '-l', '--log-file', dest='log_file', metavar='FILE', default=None,
             help='log messages to the specified file')
         self.parser.add_argument(
-            '-P', '--pdb', dest='debug', action='store_true',
+            '-P', '--pdb', dest='debug', action='store_true', default=False,
             help='run under PDB (debug mode)')
         self.parser.add_argument(
             '-G', '--gstreamer', dest='gstreamer', action='store_true',
-            help='use GStreamer instead of raspivid/still - this is '
-            'intended for debugging on a non-RPi platform')
+            default=False, help='use GStreamer instead of raspivid/still - '
+            'this is intended for debugging on a non-RPi platform')
         self.parser.add_argument(
-            '-d', '--daemon', dest='daemon', action='store_const', const=True,
+            '-d', '--daemon', dest='daemon', action='store_true', default=False,
             help='run as a background daemon process')
         self.parser.add_argument(
             '-L', '--listen', dest='listen', action='store',
-            metavar='HOST[:PORT]', type=interface,
+            default='0.0.0.0:80', metavar='HOST[:PORT]', type=interface,
             help='the address and port of the interface the web-server will '
             'listen on. Default: %(default)s')
         self.parser.add_argument(
-            '--images-dir', dest='images_dir', action='store',
-            metavar='DIR',
-            help='the directory in which to store images taken with the '
-            'camera. Default: %(default)s')
+            '--images-dir', dest='images_dir', action='store', metavar='DIR',
+            help='the directory in which to store images taken by the camera.')
         self.parser.add_argument(
-            '--thumbnails-dir', dest='thumbs_dir', action='store',
-            metavar='DIR',
-            help='the directory in which to store thumbnail images taken '
-            'by the website. Default: %(default)s')
+            '--thumbs-dir', dest='thumbs_dir', action='store', metavar='DIR',
+            help='the directory in which to store the thumbnail of images '
+            'taken by the camera.')
         self.parser.add_argument(
-            '--templates-dir', dest='templates_dir', action='store',
-            metavar='DIR',
-            help='the directory from which to read the website templates. '
-            'Default: %(default)s')
-        self.parser.add_argument(
-            '--static-dir', dest='static_dir', action='store', metavar='DIR',
-            help='the directory from which to read the static website files. '
-            'Default: %(default)s')
-        self.parser.add_argument(
-            '--thumbnails-size', dest='thumbs_size', action='store',
-            metavar='WIDTHxHEIGHT', type=size,
+            '--thumbs-size', dest='thumbs_size', action='store',
+            default='320x320', metavar='WIDTHxHEIGHT', type=size,
             help='the size that thumbnails should be generated at by the '
             'website. Default: %(default)s')
         self.parser.add_argument(
             '--email-from', dest='email_from', action='store',
-            metavar='USER[@HOST]',
+            default='picroscopy', metavar='USER[@HOST]',
             help='the address from which email will appear to be sent. '
             'Default: %(default)s')
         email_group = self.parser.add_mutually_exclusive_group()
         email_group.add_argument(
-            '--sendmail', dest='sendmail', action='store', metavar='PATH',
+            '--sendmail', dest='sendmail', action='store',
+            default='/usr/sbin/sendmail', metavar='EXEC',
             help='use the specified sendmail binary to send email. '
             'Default: %(default)s')
         email_group.add_argument(
@@ -150,16 +124,33 @@ class PicroscopyConsoleApp(object):
             help='send email directly using the specified SMTP smarthost '
             '(mutually exclusive with --sendmail)')
         self.parser.add_argument(
-            '--raspivid', dest='raspivid', action='store', metavar='PATH',
+            '--raspivid', dest='raspivid', action='store',
+            default='/usr/bin/raspivid', metavar='EXEC',
             help='the path to the raspivid binary. Default: %(default)s')
         self.parser.add_argument(
-            '--raspistill', dest='raspistill', action='store', metavar='PATH',
+            '--raspistill', dest='raspistill', action='store',
+            default='/usr/bin/raspistill', metavar='EXEC',
             help='the path to the raspistill binary. Default: %(default)s')
 
     def __call__(self, args=None):
         if args is None:
             args = sys.argv[1:]
+        # Parse the --config argument only and read the configuration file
+        conf_parser = argparse.ArgumentParser(add_help=False)
+        conf_parser.add_argument(
+            '-c', '--config', dest='config', action='store',
+            help='specify the configuration file to load')
+        conf_args, args = conf_parser.parse_known_args(args)
+        if conf_args.config:
+            config = configparser.ConfigParser(interpolation=None)
+            logging.info('Reading configuration from %s' % conf_args.config)
+            if not config.read(conf_args.config):
+                self.parser.error(
+                    'unable to read configuration file %s' % conf_args.config)
+            self.parser.set_defaults(**config['picroscopy'])
+        # Parse the rest of the arguments, overriding the config file
         args = self.parser.parse_args(args)
+        # Configure the logging module according to args
         _CONSOLE.setLevel(args.log_level)
         if args.log_file:
             log_file = logging.FileHandler(args.log_file)

@@ -91,6 +91,8 @@ def format_exif(data):
     RPI's raspistill application are excluded as are those tags which
     raspistill simply fills with invalid values.
     """
+    if not data:
+        return {}
     return {
         TAG_NAMES[key]: TAG_VALUES[key](value)
         for (key, value) in data.items()
