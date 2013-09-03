@@ -1,3 +1,20 @@
+"""
+This module defines the Picroscopy WSGI application. See `PEP-3333`_ for
+information on the WSGI specification. The main class in the module is
+PicroscopyWsgiApp. This is typically launched by PicroscopyConsoleApp using
+the WSGI reference implementation included in Python, but could equally well
+be served by any WSGI interface (Apache, nginx, etc).
+
+The web application is a trival affair (being a single-user web-app) which uses
+`wheezy.routing`_ to handle URL dispatch, and `WebOb`_'s Request and Response classes
+to ease construction of the responses. Chameleon templates are used for
+constructing HTML pages.
+
+.. PEP-3333: http://www.python.org/dev/peps/pep-3333/
+.. wheezy.routing: http://pythonhosted.org/wheezy.routing/
+.. WebOb: http://webob.org/
+"""
+
 import os
 import io
 import re

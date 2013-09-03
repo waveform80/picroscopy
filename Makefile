@@ -20,7 +20,6 @@ DEB_SOURCES:=debian/changelog \
 	debian/docs \
 	debian/compat \
 	debian/rules
-LICENSES:=LICENSE.txt
 
 # Calculate the name of all outputs
 DIST_EGG=dist/$(NAME)-$(VER)-$(PYVER).egg
@@ -84,22 +83,22 @@ clean:
 tags: $(PY_SOURCES)
 	ctags -R --exclude="build/*" --exclude="debian/*" --exclude="windows/*" --exclude="docs/*" --languages="Python"
 
-$(DIST_TAR): $(PY_SOURCES) $(LICENSES)
+$(DIST_TAR): $(PY_SOURCES)
 	$(PYTHON) $(PYFLAGS) setup.py sdist --formats gztar
 
-$(DIST_ZIP): $(PY_SOURCES) $(LICENSES)
+$(DIST_ZIP): $(PY_SOURCES)
 	$(PYTHON) $(PYFLAGS) setup.py sdist --formats zip
 
-$(DIST_EGG): $(PY_SOURCES) $(LICENSES)
+$(DIST_EGG): $(PY_SOURCES)
 	$(PYTHON) $(PYFLAGS) setup.py bdist_egg
 
-$(DIST_RPM): $(PY_SOURCES) $(LICENSES)
+$(DIST_RPM): $(PY_SOURCES)
 	$(PYTHON) $(PYFLAGS) setup.py bdist_rpm \
 		--source-only \
 		--doc-files README.rst,LICENSE.txt \
 		--requires python
 
-$(DIST_DEB): $(PY_SOURCES) $(DEB_SOURCES) $(LICENSES)
+$(DIST_DEB): $(PY_SOURCES) $(DEB_SOURCES)
 	# build the source package in the parent directory then rename it to
 	# project_version.orig.tar.gz
 	$(PYTHON) $(PYFLAGS) setup.py sdist --dist-dir=../
@@ -118,7 +117,7 @@ release: $(PY_SOURCES) $(DOC_SOURCES) $(DEB_SOURCES)
 	git commit debian/changelog -m "Updated changelog for release $(VER)"
 	git tag -s release-$(VER) -m "Release $(VER)"
 
-upload: $(PY_SOURCES) $(DOC_SOURCES) $(DEB_SOURCES) $(LICENSES)
+upload: $(PY_SOURCES) $(DOC_SOURCES) $(DEB_SOURCES)
 	# build a source archive and upload to PyPI
 	$(PYTHON) $(PYFLAGS) setup.py sdist upload
 	# build the deb source archive and upload to the PPA

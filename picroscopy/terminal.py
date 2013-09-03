@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+"""
+This module defines the command line interface for executing the picroscopy
+application. The main class, PicroscopyConsoleApp, handles parsing of command
+line parameters and configuration files, configuration of the logging system,
+and of course launching the application itself within the reference WSGI
+server included with Python.
+"""
+
 import os
 import sys
 import logging

@@ -1,6 +1,6 @@
 """
-Some rudimentary EXIF handling, specifically those tags that are used by
-raspistill.
+Some rudimentary EXIF handling, specifically handling those tags that are used
+by raspistill.
 """
 
 CAMERA_MAKE   = 271

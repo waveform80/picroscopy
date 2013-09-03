@@ -1,3 +1,20 @@
+"""
+This module defines the interface to the Picam. The main class is
+PicroscopyCamera which starts a preview session (using raspivid) upon
+instantiation. When the capture() method is called, the preview is stopped, an
+image is captured, and the preview is restarted. Users should call the close()
+method before finishing with PicroscopyCamera to ensure the preview session is
+closed.
+
+The camera object also acts as an iterable. Iterating over the camera returns
+the filenames of the images that have been captured. Methods like stat_image(),
+open_image(), open_thumbnail() etc. can be called with these filenames to
+obtain information about the images, or the image data itself.
+
+Finally, convenience methods like send() and archive() are defined to automate
+transmission of the image library in various media.
+"""
+
 import os
 import io
 import logging
