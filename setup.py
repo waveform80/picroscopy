@@ -36,6 +36,7 @@ class PyTest(TestCommand):
 
 
 def main():
+    import io
     with io.open(os.path.join(HERE, 'README.rst'), 'r') as readme:
         setup(
             name                 = picroscopy.__name__,

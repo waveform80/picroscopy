@@ -4,17 +4,7 @@ __version__      = '0.1'
 __author__       = 'Dave Hughes'
 __author_email__ = 'dave@waveform.org.uk'
 __url__          = 'https://www.waveform.org.uk/picroscopy/'
-__platforms__    = 'ALL'
-
-__requires__ = [
-    'webob<=2.0dev',
-    'chameleon<=3.0dev',
-    'wheezy.routing<=2.0dev',
-    'pillow<=3.0dev',
-    ]
-
-__extra_requires__ = {
-    }
+__platforms__    = ['ALL']
 
 __classifiers__ = [
     'Development Status :: 4 - Beta',
@@ -34,6 +24,16 @@ __keywords__ = [
     'microscope',
     'raspberrypi',
     ]
+
+__requires__ = [
+    'webob<=2.0dev',
+    'chameleon<=3.0dev',
+    'wheezy.routing<=2.0dev',
+    'pillow<=3.0dev',
+    ]
+
+__extra_requires__ = {
+    }
 
 __entry_points__ = {
     'console_scripts': [
