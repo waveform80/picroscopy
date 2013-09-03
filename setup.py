@@ -65,7 +65,7 @@ def main():
             url                  = picroscopy.__url__,
             license              = [
                 c.rsplit('::', 1)[1].strip()
-                for c in picroscopy._classifiers__
+                for c in picroscopy.__classifiers__
                 if c.startswith('License ::')
                 ][0],
             keywords             = ' '.join(picroscopy.__keywords__),
