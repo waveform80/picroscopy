@@ -108,6 +108,8 @@ class PicroscopyWsgiApp(object):
         # No need to make flashes a per-session thing - it's a single user app!
         self.flashes = []
         self.router = PathRouter()
+        # XXX Add handler for exiting system
+        # XXX Make exit code conditional? (upgrade/reboot/shutdown/etc.)
         self.router.add_routes([
             url('/',                   self.do_template, kwargs={'page': 'library'}, name='home'),
             url('/{page}.html',        self.do_template, name='template'),
@@ -192,6 +194,7 @@ class PicroscopyWsgiApp(object):
             except ValueError:
                 self.flashes.append(
                     'Invalid %s: %s' % (setting, req.params[setting]))
+        # XXX Add handler for system settings
         # If any settings failed, re-render the settings form
         if self.flashes:
             return self.do_template(req, 'settings')

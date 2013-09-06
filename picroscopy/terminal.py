@@ -204,6 +204,7 @@ class PicroscopyConsoleApp(object):
     def main(self, args):
         app = PicroscopyWsgiApp(**vars(args))
         try:
+            # XXX Print IP address in big font (display image? ascii art?)
             httpd = make_server(args.listen[0], args.listen[1], app)
             logging.warning('Listening on %s:%s' % (args.listen[0], args.listen[1]))
             httpd.serve_forever()

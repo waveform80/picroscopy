@@ -35,6 +35,7 @@ transmission of the image library in various media.
 
 import os
 import io
+import errno
 import logging
 import threading
 import subprocess
@@ -184,8 +185,16 @@ class PicroscopyCamera(object):
             'thumbs_dir', self.thumbs_tmp)))
         logging.info('Using %s for images' % self.images_dir)
         logging.info('Using %s for thumbnails' % self.thumbs_dir)
-        os.makedirs(self.images_dir, exist_ok=True)
-        os.makedirs(self.thumbs_dir, exist_ok=True)
+        try:
+            os.mkdir(self.images_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+        try:
+            os.mkdir(self.thumbs_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
         self.thumbs_size = kwargs.get('thumbs_size', (320, 320))
         self.email_from = kwargs.get('email_from', 'picroscopy')
         self.sendmail = kwargs.get('sendmail', '/usr/sbin/sendmail')
