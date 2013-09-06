@@ -110,14 +110,16 @@ class PicroscopyConsoleApp(object):
             help='run under PDB (debug mode)')
         self.parser.add_argument(
             '-G', '--gstreamer', dest='gstreamer', action='store_true',
-            default=False, help='use GStreamer instead of raspivid/still - '
-            'this is intended for debugging on a non-RPi platform')
+            default=False,
+            help='use GStreamer instead of raspivid/still - this is intended '
+            'for debugging on a non-RPi platform')
         self.parser.add_argument(
             '-d', '--daemon', dest='daemon', action='store_true', default=False,
             help='run as a background daemon process')
         self.parser.add_argument(
             '-L', '--listen', dest='listen', action='store',
-            default='0.0.0.0:80', metavar='HOST[:PORT]', type=interface,
+            default='0.0.0.0:%d' % (8000 if os.geteuid() else 80),
+            metavar='HOST[:PORT]', type=interface,
             help='the address and port of the interface the web-server will '
             'listen on. Default: %(default)s')
         self.parser.add_argument(
