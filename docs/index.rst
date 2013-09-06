@@ -1,8 +1,8 @@
-.. -*- rst -*-
+.. _root:
 
-==========
-picroscopy
-==========
+============================
+Documentation for picroscopy
+============================
 
 Picroscopy is a small Python web-application which is intended for usage with a
 `Raspberry Pi`_ as a microscopy solution. With the `Raspberry Pi Camera`_
@@ -16,13 +16,26 @@ code`_ can be obtained from GitHub. The `documentation`_ can be read on
 ReadTheDocs.
 
 
-Appliance
-=========
+Table of Contents
+=================
 
-By far the simplest method of installation is to grab the raspbian image which
-includes Picroscopy from the `homepage`_ and load this onto an SD card as you
-would a normal Raspbian image. Upon bootup, the Pi should start Picroscopy
-automatically.
+.. toctree::
+   :maxdepth: 2
+   :numbered:
+
+   install
+   usage
+   license
+
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
 
 
 .. _Raspberry Pi: http://www.raspberrypi.org/
@@ -32,3 +45,4 @@ automatically.
 .. _source code: https://github.com/waveform80/picroscopy.git
 .. _Python: http://python.org/
 .. _GPL license: http://www.gnu.org/licenses/gpl-3.0.html
+
