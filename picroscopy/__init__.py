@@ -1,3 +1,5 @@
+# vim: set et sw=4 sts=4 fileencoding=utf-8:
+
 # Copyright 2013 Dave Hughes.
 #
 # This file is part of picroscopy.
@@ -14,7 +16,7 @@
 # You should have received a copy of the GNU General Public License along with
 # picroscopy.  If not, see <http://www.gnu.org/licenses/>.
 
-"""A web application using a RaspberryPi and Picam for microscopy."""
+"A web application using a RaspberryPi and Picam for microscopy."
 
 __version__      = '0.1'
 __author__       = 'Dave Hughes'
@@ -30,7 +32,7 @@ __classifiers__ = [
     'Operating System :: Microsoft :: Windows',
     'Operating System :: POSIX',
     'Operating System :: Unix',
-    'Programming Language :: Python :: 3.2',
+    'Programming Language :: Python :: 3',
     'Topic :: Multimedia :: Graphics',
     'Topic :: Scientific/Engineering',
     ]

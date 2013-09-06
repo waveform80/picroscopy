@@ -1,3 +1,5 @@
+# vim: set et sw=4 sts=4 fileencoding=utf-8:
+
 # Copyright 2013 Dave Hughes.
 #
 # This file is part of picroscopy.
