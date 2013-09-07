@@ -93,10 +93,18 @@ def network(s):
 
 
 class PicroscopyConsoleApp(object):
+    """
+    The picroscopy application launches a live view of the Raspberry Pi's
+    camera and serves a web application providing control of the camera.
+    Various options can be used to configure which network clients can access
+    the web application, and the paths which the camera will use when writing
+    images.
+    """
+
     def __init__(self):
         super().__init__()
         self.parser = argparse.ArgumentParser(
-            description=__doc__,
+            description=self.__doc__,
             # suppress creation of unspecified attributes
             argument_default=argparse.SUPPRESS
             )
@@ -123,9 +131,6 @@ class PicroscopyConsoleApp(object):
             default=False,
             help='use GStreamer instead of raspivid/still - this is intended '
             'for debugging on a non-RPi platform')
-        self.parser.add_argument(
-            '-d', '--daemon', dest='daemon', action='store_true', default=False,
-            help='run as a background daemon process')
         self.parser.add_argument(
             '-L', '--listen', dest='listen', action='store',
             default='0.0.0.0:%d' % (8000 if os.geteuid() else 80),
