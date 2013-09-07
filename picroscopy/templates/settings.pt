@@ -238,39 +238,6 @@
 
           </fieldset>
 
-          <fieldset class="advanced">
-            <legend>System Settings</legend>
-
-            <div class="row">
-              <div class="small-3 columns">
-                <label class="right inline">Address Type</label>
-              </div>
-              <div class="small-9 columns">
-                <label><input type="radio" name="dhcp" value="true" /> Dynamic (DHCP)</label>
-                <label><input type="radio" name="dhcp" value="false" /> Static</label>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="small-3 columns">
-                <label for="address" class="right inline">Address</label>
-              </div>
-              <div class="small-9 columns">
-                <input type="text" name="address" value="" />
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="small-3 columns">
-                <label for="address" class="right inline">Address</label>
-              </div>
-              <div class="small-9 columns">
-                <input type="text" name="address" value="" />
-              </div>
-            </div>
-
-          </fieldset>
-
         </div>
       </div>
 
