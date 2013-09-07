@@ -181,10 +181,10 @@ class PicroscopyCamera(object):
         self.thumbs_tmp = tempfile.mkdtemp(dir=os.environ.get('TEMP', '/tmp'))
         self.images_dir = os.path.abspath(os.path.normpath(kwargs.get(
             'images_dir', self.images_tmp)))
+        logging.info('Images directory: %s', self.images_dir)
         self.thumbs_dir = os.path.abspath(os.path.normpath(kwargs.get(
             'thumbs_dir', self.thumbs_tmp)))
-        logging.info('Using %s for images' % self.images_dir)
-        logging.info('Using %s for thumbnails' % self.thumbs_dir)
+        logging.info('Thumbnails directory: %s', self.thumbs_dir)
         try:
             os.mkdir(self.images_dir)
         except OSError as e:
@@ -196,9 +196,15 @@ class PicroscopyCamera(object):
             if e.errno != errno.EEXIST:
                 raise
         self.thumbs_size = kwargs.get('thumbs_size', (320, 320))
+        logging.info('Generating thumbnails at %d x %d', *self.thumbs_size)
         self.email_from = kwargs.get('email_from', 'picroscopy')
+        logging.info('Sending mail from: %s', self.email_from)
         self.sendmail = kwargs.get('sendmail', '/usr/sbin/sendmail')
         self.smtp_server = kwargs.get('smtp_server', None)
+        if self.smtp_server:
+            logging.info('Sending mail via SMTP server: %s', self.smtp_server)
+        else:
+            logging.info('Sending mail via sendmail binary: %s', self.sendmail)
         USE_GSTREAMER = kwargs.get('gstreamer', False)
         RASPIVID = kwargs.get('raspivid', '/usr/bin/raspivid')
         RASPISTILL = kwargs.get('raspistill', '/usr/bin/raspistill')

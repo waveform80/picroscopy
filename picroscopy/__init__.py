@@ -44,10 +44,11 @@ __keywords__ = [
     ]
 
 __requires__ = [
-    'webob<=2.0dev',
-    'chameleon<=3.0dev',
-    'wheezy.routing<=2.0dev',
-    'pillow<=3.0dev',
+    'webob<2.0dev',
+    'chameleon<3.0dev',
+    'wheezy.routing<2.0dev',
+    'pillow<3.0dev',
+    'IPy<2.0dev',
     ]
 
 __extra_requires__ = {

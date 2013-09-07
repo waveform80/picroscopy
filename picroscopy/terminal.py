@@ -34,6 +34,8 @@ import locale
 import configparser
 from wsgiref.simple_server import make_server
 
+from IPy import IP
+
 from picroscopy import __version__
 from picroscopy.wsgi import PicroscopyWsgiApp
 
@@ -81,6 +83,14 @@ def interface(s):
         port = 80
     return (host, port)
 
+def network(s):
+    """
+    Parses a string containing a network[/cidr] specification.
+    """
+    if not s:
+        return None
+    return IP(s)
+
 
 class PicroscopyConsoleApp(object):
     def __init__(self):
@@ -107,7 +117,7 @@ class PicroscopyConsoleApp(object):
             help='log messages to the specified file')
         self.parser.add_argument(
             '-P', '--pdb', dest='debug', action='store_true', default=False,
-            help='run under PDB (debug mode)')
+            help='run under PuDB/PDB (debug mode)')
         self.parser.add_argument(
             '-G', '--gstreamer', dest='gstreamer', action='store_true',
             default=False,
@@ -123,12 +133,18 @@ class PicroscopyConsoleApp(object):
             help='the address and port of the interface the web-server will '
             'listen on. Default: %(default)s')
         self.parser.add_argument(
+            '-C', '--clients', dest='clients', action='store',
+            default='0.0.0.0/0', metavar='NETWORK[/LEN]', type=network,
+            help='the network that clients must belong to. '
+            'Default: %(default)s')
+        self.parser.add_argument(
             '--images-dir', dest='images_dir', action='store', metavar='DIR',
-            help='the directory in which to store images taken by the camera.')
+            help='the directory in which to store images taken by the camera. '
+            'Defaults to a temporary directory')
         self.parser.add_argument(
             '--thumbs-dir', dest='thumbs_dir', action='store', metavar='DIR',
             help='the directory in which to store the thumbnail of images '
-            'taken by the camera.')
+            'taken by the camera. Defaults to a temporary directory')
         self.parser.add_argument(
             '--thumbs-size', dest='thumbs_size', action='store',
             default='320x320', metavar='WIDTHxHEIGHT', type=size,
@@ -208,7 +224,7 @@ class PicroscopyConsoleApp(object):
         try:
             # XXX Print IP address in big font (display image? ascii art?)
             httpd = make_server(args.listen[0], args.listen[1], app)
-            logging.warning('Listening on %s:%s' % (args.listen[0], args.listen[1]))
+            logging.info('Listening on %s:%s' % (args.listen[0], args.listen[1]))
             httpd.serve_forever()
         finally:
             app.camera.close()

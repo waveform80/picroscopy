@@ -16,15 +16,6 @@ code`_ can be obtained from GitHub. The `documentation`_ can be read on
 ReadTheDocs.
 
 
-Appliance
-=========
-
-By far the simplest method of installation is to grab the raspbian image which
-includes Picroscopy from the `homepage`_ and load this onto an SD card as you
-would a normal Raspbian image. Upon bootup, the Pi should start Picroscopy
-automatically.
-
-
 .. _Raspberry Pi: http://www.raspberrypi.org/
 .. _Raspberry Pi Camera: http://www.raspberrypi.org/camera
 .. _homepage: https://www.waveform.org.uk/picroscopy/
