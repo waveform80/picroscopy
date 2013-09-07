@@ -43,6 +43,7 @@ import datetime
 from wsgiref.util import FileWrapper
 from operator import itemgetter
 
+from IPy import IP
 from webob import Request, Response, exc
 from chameleon import PageTemplateLoader
 from wheezy.routing import PathRouter, url
@@ -96,12 +97,16 @@ class PicroscopyWsgiApp(object):
         super().__init__()
         self.camera = PicroscopyCamera(**kwargs)
         self.helpers = WebHelpers(self.camera)
+        self.clients = kwargs.get('clients', IP('0.0.0.0/0'))
+        logging.info('Clients must be on network %s', self.clients)
         self.static_dir = os.path.abspath(os.path.normpath(kwargs.get(
             'static_dir', os.path.join(HERE, 'static')
             )))
+        logging.info('Static files: %s', self.static_dir)
         self.templates_dir = os.path.abspath(os.path.normpath(kwargs.get(
             'templates_dir', os.path.join(HERE, 'templates')
             )))
+        logging.info('Chameleon templates: %s', self.templates_dir)
         self.templates = PageTemplateLoader(
             self.templates_dir, default_extension='.pt')
         self.layout = self.templates['layout']
@@ -129,6 +134,8 @@ class PicroscopyWsgiApp(object):
     def __call__(self, environ, start_response):
         req = Request(environ)
         try:
+            if not IP(req.remote_addr) in self.clients:
+                raise exc.HTTPForbidden()
             handler, kwargs = self.router.match(req.path_info)
             if handler:
                 # XXX Why does route_name only appear in kwargs sometimes?!
