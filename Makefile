@@ -41,6 +41,7 @@ install:
 
 doc: $(DOC_SOURCES)
 	$(PYTHON) $(PYFLAGS) setup.py build_sphinx -b html
+	$(PYTHON) $(PYFLAGS) setup.py build_sphinx -b man
 	$(PYTHON) $(PYFLAGS) setup.py build_sphinx -b latex
 	$(MAKE) -C build/sphinx/latex all-pdf
 

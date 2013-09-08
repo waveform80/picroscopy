@@ -62,7 +62,7 @@ Description
 
 .. option:: -P, --pdb
 
-    Run under PuDB (if available) or PDB. This launches Picroscopy within the
+    Run under `PuDB`_ (if available) or PDB. This launches Picroscopy within the
     Python debugger for development purposes.
 
 .. option:: -G, --gstreamer
@@ -73,15 +73,15 @@ Description
 .. option:: -L HOST[:PORT], --listen HOST[:PORT]
 
     The address and port of the interface that Picroscopy will listen on.
-    Defaults to 0.0.0.0:80 (when running as root) or 0.0.0.0:8000 (when running
-    as a non-root user). The 0.0.0.0 address means "listen on all available
-    network interfaces".
+    Defaults to ``0.0.0.0:80`` (when running as root) or ``0.0.0.0:8000`` (when
+    running as a non-root user). The ``0.0.0.0`` address means "listen on all
+    available network interfaces".
 
 .. option:: -C NETWORK[/LEN], --clients NETWORK[/LEN]
 
     The network that clients must belong to. Clients that do not belong to the
     specified network will be denied access to Picroscopy. Defaults to
-    0.0.0.0/0 (all valid addresses).
+    ``0.0.0.0/0`` (all valid addresses).
 
 .. option:: --images-dir DIR
 
@@ -112,7 +112,7 @@ Description
 
     Use the specified sendmail binary to send e-mail. This is the preferred
     option for sending e-mail as it (usually) gracefully handles the case where
-    the target SMTP server is unavailable. Defaults to /usr/sbin/sendmail.
+    the target SMTP server is unavailable. Defaults to ``/usr/sbin/sendmail``.
 
 .. option:: --smtp-server HOST[:PORT]
 
@@ -129,3 +129,92 @@ Description
     The path to the raspbistill binary to use. Defaults to
     ``/usr/bin/raspistill``.
 
+
+Configuration Files
+===================
+
+Configuration files are read (by default) from the following locations, in the
+order presented (i.e. values found in later files override values found in
+earlier files):
+
+1. ``/etc/picroscopy.ini``
+
+2. ``/usr/local/etc/picroscopy.ini``
+
+3. ``~/.picroscopy.ini`` (where ``~`` represents the current user's home
+   directory)
+
+You can manually specify a configuration to load with the :option:`-c` option.
+In this case, the manually specified configuration will be read last, ensuring
+its values take precedence over any values read from the files listed above.
+
+Picroscopy's configuration format is based on the familiar INI-file format. The
+configuration file must have a ``[picroscopy]`` section (Picroscopy will ignore
+other sections within the file), which contains ``key=value`` entries on
+separate lines. Key names are case insensitive.  Key names and values may have
+leading or trailing whitespace which will be ignored.  Blank lines are ignored,
+as are comments which are whole lines prefixed with either ``#`` or ``;``.
+
+An example configuration file is shown below::
+
+  [picroscopy]
+
+  ; Blank lines are ignored, as is this line, which is a comment
+  # This is also a comment
+
+  ; Spaces surrounding keys and values are ignored...
+    listen = 127.0.0.1:8000
+  clients = 127.0.0.0/8
+
+  ; Case is ignored for key names
+  IMAGES_DIR=/tmp/picroscopy_images
+  Thumbs_Dir=/tmp/picroscopy_thumbs
+
+The key names which can appear in the configuration file are the same as the
+available "long-style" command line options documented above, with the caveat
+that leading dashes are stripped and any dashes within the option are replaced
+by underscore. Hence the :option:`--images-dir` option becomes the
+``images_dir`` key within the configuration file.
+
+Two example configuration files are shipped with Picroscopy:
+``picroscopy.ini`` which contains a configuration suitable for normal usage,
+and ``development.ini`` which contains values suitable for development
+purposes.
+
+
+Examples
+========
+
+Run Picroscopy, with the default configuration and verbose logging::
+
+    $ picroscopy -v
+
+Run Picroscopy, listening for clients on port 8080 of the interface with the
+address ``192.168.0.5``, and only accepting requests from the machine with
+IP address ``192.168.0.6``::
+
+    $ picroscopy -L 192.168.0.5:8080 -C 192.168.0.6
+
+Run Picroscopy, only accepting requests from the ``192.168.0.0`` private
+network::
+
+    $ picroscopy -C 192.168.0.0/16
+
+Run Picroscopy, ensuring that e-mail is sent via the SMTP server running on
+``localhost``, and that e-mail appears to come from ``noreply@example.com``::
+
+    $ picroscopy --smtp-server localhost --email-from noreply@example.com
+
+Run Picroscopy, using custom builds of raspivid and raspistill::
+
+    $ picroscopy --raspivid /home/pi/build/raspivid --raspistill /home/pi/build/raspistill
+
+Run Picroscopy, explicitly specifying the images directory and the thumbnails
+directory (which ensures both persist across runs; the default is to use
+ephemeral temporary directories)::
+
+    $ mkdir -p picroscopy/images picroscopy/thumbs
+    $ picroscopy --images-dir picroscopy/images --thumbs-dir picroscopy/thumbs
+
+
+.. _PuDB: http://pypi.python.org/pypi/pudb

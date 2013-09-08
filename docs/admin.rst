@@ -65,9 +65,13 @@ switches, or are specified as entries in a configuration file which is
 specified with the :option:`picroscopy -c` option. If an option appears both
 in the configuration file and as a switch on the command line, the command
 line switch will take precedence. Specifically, the order of precedence for
-options is as follows::
+options is:
 
-    command line switch > configuration key > default
+1. command line switch
+
+2. configuration key
+
+3. default
 
 The Picroscopy application does not fork like a daemon once started. As it is
 a single user application that utilizes the Raspberry Pi's display there is

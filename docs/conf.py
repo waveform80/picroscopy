@@ -89,7 +89,7 @@ latex_documents = [
 
 man_pages = [
     (
-        'index',                          # source start file
+        'picroscopy',                     # source start file
         picroscopy.__name__,              # page name
         '%s Documentation' % project,     # description
         [picroscopy.__author__],          # author list
