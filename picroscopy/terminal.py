@@ -42,8 +42,9 @@ from picroscopy.wsgi import PicroscopyWsgiApp
 # Use the user's default locale instead of C
 locale.setlocale(locale.LC_ALL, '')
 
-# Set up a console logging handler which just prints messages without any other
-# adornments
+# Set up a console logging handler which just prints messages to stderr without
+# any other adornments. This will be used for logging messages sent before we
+# "properly" configure logging according to the user's preferences
 _CONSOLE = logging.StreamHandler(sys.stderr)
 _CONSOLE.setFormatter(logging.Formatter('%(message)s'))
 _CONSOLE.setLevel(logging.DEBUG)
@@ -183,33 +184,9 @@ class PicroscopyConsoleApp(object):
     def __call__(self, args=None):
         if args is None:
             args = sys.argv[1:]
-        # Parse the --config argument only and read the configuration file
-        conf_parser = argparse.ArgumentParser(add_help=False)
-        conf_parser.add_argument(
-            '-c', '--config', dest='config', action='store',
-            help='specify the configuration file to load')
-        conf_args, args = conf_parser.parse_known_args(args)
-        if conf_args.config:
-            config = configparser.ConfigParser(interpolation=None)
-            logging.info('Reading configuration from %s' % conf_args.config)
-            if not config.read(conf_args.config):
-                self.parser.error(
-                    'unable to read configuration file %s' % conf_args.config)
-            self.parser.set_defaults(**config['picroscopy'])
-        # Parse the rest of the arguments, overriding the config file
+        args = self.read_configuration(args)
         args = self.parser.parse_args(args)
-        # Configure the logging module according to args
-        _CONSOLE.setLevel(args.log_level)
-        if args.log_file:
-            log_file = logging.FileHandler(args.log_file)
-            log_file.setFormatter(
-                logging.Formatter('%(asctime)s, %(levelname)s, %(message)s'))
-            log_file.setLevel(logging.DEBUG)
-            logging.getLogger().addHandler(log_file)
-        if args.debug:
-            logging.getLogger().setLevel(logging.DEBUG)
-        else:
-            logging.getLogger().setLevel(logging.INFO)
+        self.configure_logging(args)
         if args.debug:
             try:
                 import pudb
@@ -223,6 +200,64 @@ class PicroscopyConsoleApp(object):
             except Exception as e:
                 logging.error(str(e))
                 return 1
+
+    def read_configuration(self, args):
+        # Parse the --config argument only
+        parser = argparse.ArgumentParser(add_help=False)
+        parser.add_argument('-c', '--config', dest='config', action='store')
+        conf_args, args = parser.parse_known_args(args)
+        conf_files = [
+            '/etc/picroscopy.ini',                   # system wide config
+            '/usr/local/etc/picroscopy.ini',         # alternate system config
+            os.path.expanduser('~/.picroscopy.ini'), # user config
+            ]
+        if conf_args.config:
+            conf_files.append(conf_args.config)
+        config = configparser.ConfigParser(interpolation=None)
+        logging.info('Reading configuration from %s', ', '.join(conf_files))
+        conf_read = config.read(conf_files)
+        if conf_args.config and conf_args.config not in conf_read:
+            self.parser.error('unable to read %s', conf_args.confg)
+        if conf_read:
+            section = 'picroscopy'
+            if not section in config:
+                self.parser.error(
+                    'unable to locate [picroscopy] section in configuration')
+            self.parser.set_defaults(**{
+                key:
+                config.getboolean(section, key)
+                if key in ('pdb', 'gstreamer') else
+                config.get(section, key)
+                for key in (
+                    'pdb',
+                    'gstreamer',
+                    'log_file',
+                    'listen',
+                    'clients',
+                    'images_dir',
+                    'thumbs_dir',
+                    'email_from',
+                    'sendmail',
+                    'smtp_server',
+                    'raspivid',
+                    'raspistill',
+                    )
+                if key in config[section]
+                })
+        return args
+
+    def configure_logging(self, args):
+        _CONSOLE.setLevel(args.log_level)
+        if args.log_file:
+            log_file = logging.FileHandler(args.log_file)
+            log_file.setFormatter(
+                logging.Formatter('%(asctime)s, %(levelname)s, %(message)s'))
+            log_file.setLevel(logging.DEBUG)
+            logging.getLogger().addHandler(log_file)
+        if args.debug:
+            logging.getLogger().setLevel(logging.DEBUG)
+        else:
+            logging.getLogger().setLevel(logging.INFO)
 
     def main(self, args):
         app = PicroscopyWsgiApp(**vars(args))
