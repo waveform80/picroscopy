@@ -43,7 +43,14 @@ import datetime
 from wsgiref.util import FileWrapper
 from operator import itemgetter
 
-from IPy import IP
+# Try and use Python 3.3's ipaddress module if available. Fallback on the 3rd
+# party IPy library if not
+try:
+    from ipaddress import IPv4Address, IPv4Network
+except ImportError:
+    from IPy import IP as IPv4Address
+    IPv4Network = IPv4Address
+
 from webob import Request, Response, exc
 from chameleon import PageTemplateLoader
 from wheezy.routing import PathRouter, url
@@ -97,7 +104,7 @@ class PicroscopyWsgiApp(object):
         super().__init__()
         self.camera = PicroscopyCamera(**kwargs)
         self.helpers = WebHelpers(self.camera)
-        self.clients = kwargs.get('clients', IP('0.0.0.0/0'))
+        self.clients = kwargs.get('clients', IPv4Network('0.0.0.0/0'))
         logging.info('Clients must be on network %s', self.clients)
         self.static_dir = os.path.abspath(os.path.normpath(kwargs.get(
             'static_dir', os.path.join(HERE, 'static')
@@ -134,7 +141,7 @@ class PicroscopyWsgiApp(object):
     def __call__(self, environ, start_response):
         req = Request(environ)
         try:
-            if not IP(req.remote_addr) in self.clients:
+            if not IPv4Address(req.remote_addr) in self.clients:
                 raise exc.HTTPForbidden()
             handler, kwargs = self.router.match(req.path_info)
             if handler:

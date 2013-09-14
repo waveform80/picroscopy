@@ -18,6 +18,8 @@
 
 "A web application using a RaspberryPi and Picam for microscopy."
 
+import sys
+
 __version__      = '0.1'
 __author__       = 'Dave Hughes'
 __author_email__ = 'dave@waveform.org.uk'
@@ -29,11 +31,10 @@ __classifiers__ = [
     'Environment :: Web Environment',
     'Intended Audience :: Science/Research',
     'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
-    'Operating System :: Microsoft :: Windows',
     'Operating System :: POSIX',
     'Operating System :: Unix',
     'Programming Language :: Python :: 3',
-    'Topic :: Multimedia :: Graphics',
+    'Topic :: Multimedia :: Graphics :: Capture',
     'Topic :: Scientific/Engineering',
     ]
 
@@ -48,8 +49,23 @@ __requires__ = [
     'chameleon<3.0dev',
     'wheezy.routing<2.0dev',
     'pillow<3.0dev',
-    'IPy<2.0dev',
     ]
+
+if sys.version_info >= (3, 3):
+    __requires__.extend([
+        'sphinx',
+        ])
+else:
+    __requires__.extend([
+        # Use the IPy library on Python 3.2; 3.3+ uses the built-in ipaddress
+        # module
+        'IPy<2.0dev',
+        # Versions are required for Python 3.2 compatibility. The ordering is
+        # reversed because that's what easy_install needs...
+        'sphinx',
+        'Jinja2<2.7',
+        'MarkupSafe<0.16',
+        ])
 
 __extra_requires__ = {
     }

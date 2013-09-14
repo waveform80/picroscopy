@@ -34,7 +34,13 @@ import locale
 import configparser
 from wsgiref.simple_server import make_server
 
-from IPy import IP
+# Try and use Python 3.3's ipaddress module if available. Fallback on the 3rd
+# party IPy library if not
+try:
+    from ipaddress import IPv4Address, IPv4Network
+except ImportError:
+    from IPy import IP as IPv4Address
+    IPv4Network = IPv4Address
 
 from picroscopy import __version__
 from picroscopy.wsgi import PicroscopyWsgiApp
@@ -90,7 +96,7 @@ def network(s):
     """
     if not s:
         return None
-    return IP(s)
+    return IPv4Network(s)
 
 
 class PicroscopyConsoleApp(object):
@@ -263,6 +269,7 @@ class PicroscopyConsoleApp(object):
         app = PicroscopyWsgiApp(**vars(args))
         try:
             # XXX Print IP address in big font (display image? ascii art?)
+            # XXX Or perhaps overlay IP address and client config on display?
             httpd = make_server(args.listen[0], args.listen[1], app)
             logging.info('Listening on %s:%s' % (args.listen[0], args.listen[1]))
             httpd.serve_forever()
