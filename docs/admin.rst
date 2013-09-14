@@ -75,7 +75,7 @@ options is:
 
 The Picroscopy application does not fork like a daemon once started. As it is
 a single user application that utilizes the Raspberry Pi's display there is
-little point in running as a system daemon.
+little point in running as a system daemon, despite using a web interface.
 
 
 .. _config:

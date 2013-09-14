@@ -62,7 +62,7 @@ Description
 
 .. option:: -P, --pdb
 
-    Run under `PuDB`_ (if available) or PDB. This launches Picroscopy within the
+    Run under `PuDB`_ (if available) or PDB. This launches Picroscopy within a
     Python debugger for development purposes.
 
 .. option:: -G, --gstreamer
