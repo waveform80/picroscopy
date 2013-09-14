@@ -106,7 +106,7 @@ def start_preview(settings):
                 cmdline = [
                     'gst-launch-0.10',
                     'v4l2src',                              '!',
-                    'video/x-raw-yuv,width=320,height=240', '!',
+                    'video/x-raw-yuv,width=640,height=360', '!',
                     'ffmpegcolorspace',                     '!',
                     'xvimagesink',
                     ]
@@ -132,7 +132,7 @@ def capture_image(dest, settings):
                 cmdline = [
                     'gst-launch-0.10',
                     'v4l2src', 'num-buffers=1',             '!',
-                    'video/x-raw-yuv,width=640,height=480', '!',
+                    'video/x-raw-yuv,width=640,height=360', '!',
                     'ffmpegcolorspace',                     '!',
                     'jpegenc',                              '!',
                     'filesink', 'location=%s' % dest,
