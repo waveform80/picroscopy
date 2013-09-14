@@ -5,6 +5,14 @@ PYTHON=python3
 PYFLAGS=
 DEST_DIR=/
 
+# Horrid hack to ensure setuptools is installed in our python environment. This
+# is necessary with Python 3.3's venvs which don't install it by default.
+ifeq ($(shell python -c "import setuptools" 2>&1),)
+SETUPTOOLS:=
+else
+SETUPTOOLS:=$(shell wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py -O - | $(PYTHON))
+endif
+
 # Calculate the base names of the distribution, the location of all source,
 # documentation, packaging, icon, and executable script files
 NAME:=$(shell $(PYTHON) $(PYFLAGS) setup.py --name)
