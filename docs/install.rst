@@ -21,6 +21,20 @@ Finally, install Picroscopy within the environment::
 
     $ easy_install picroscopy
 
+.. warning::
+    If you install picroscopy with the optional ``[doc]`` specifier (which
+    installs the dependencies required to build the documentation), the
+    installation will take an *extremely* long time to build on the Pi.
+
+    Sphinx and docutils, which are used for the documentation, take nearly an
+    hour to build; this seems to have something to do with their use of
+    ``2to3`` to attain Python 3 compatibility.
+
+You should now be able to run picroscopy with one of the included configuration
+files like so::
+
+    $ picroscopy -c picroscopy.ini
+
 
 Development
 ===========
@@ -52,4 +66,14 @@ files like so::
 
     $ picroscopy -c development.ini
 
+If you wish to develop the documentation, please be aware of the warning above
+about long installation times. You can use the following make target to build
+the documentation in all available formats (output will be under
+``build/sphinx/{html,latex,man,...}``)::
+
+    $ make doc
+
+If you wish to run the test suite use the following make target::
+
+    $ make test
 
