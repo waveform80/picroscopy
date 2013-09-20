@@ -51,24 +51,22 @@ __requires__ = [
     'pillow<3.0dev',
     ]
 
-if sys.version_info >= (3, 3):
-    __requires__.extend([
-        'sphinx',
-        ])
-else:
+__extra_requires__ = {
+    'doc': ['sphinx'],
+    }
+
+if sys.version_info < (3, 3):
     __requires__.extend([
         # Use the IPy library on Python 3.2; 3.3+ uses the built-in ipaddress
         # module
         'IPy<2.0dev',
+        ])
+    __extra_requires__['doc'].extend([
         # Versions are required for Python 3.2 compatibility. The ordering is
         # reversed because that's what easy_install needs...
-        'sphinx',
         'Jinja2<2.7',
         'MarkupSafe<0.16',
         ])
-
-__extra_requires__ = {
-    }
 
 __entry_points__ = {
     'console_scripts': [
