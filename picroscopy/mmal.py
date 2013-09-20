@@ -285,14 +285,12 @@ mmal_buffer_header_release_continue = _lib.mmal_buffer_header_release_continue
 mmal_buffer_header_release_continue.argtypes = [ct.POINTER(MMAL_BUFFER_HEADER_T)]
 mmal_buffer_header_release_continue.restype = None
 
-MMAL_BH_PRE_RELEASE_CB_T = ct.POINTER(
-        ct.CFUNCTYPE(
-            MMAL_BOOL_T,
-            ct.POINTER(MMAL_BUFFER_HEADER_T), ct.c_void_p)
-        )
+MMAL_BH_PRE_RELEASE_CB_T = ct.CFUNCTYPE(
+    MMAL_BOOL_T,
+    ct.POINTER(MMAL_BUFFER_HEADER_T), ct.c_void_p)
 
 mmal_buffer_header_pre_release_cb_set = _lib.mmal_buffer_header_pre_release_cb_set
-mmal_buffer_header_pre_release_cb_set.argtypes = [ct.POINTER(MMAL_BUFFER_HEADER_T), MMAL_BH_PRE_RELEASE_CB_T, ct.c_void_p]
+mmal_buffer_header_pre_release_cb_set.argtypes = [ct.POINTER(MMAL_BUFFER_HEADER_T), ct.POINTER(MMAL_BH_PRE_RELEASE_CB_T), ct.c_void_p]
 mmal_buffer_header_pre_release_cb_set.restype = None
 
 mmal_buffer_header_replicate = _lib.mmal_buffer_header_replicate
@@ -1440,14 +1438,12 @@ mmal_port_format_commit = _lib.mmal_port_format_commit
 mmal_port_format_commit.argtypes = [ct.POINTER(MMAL_PORT_T)]
 mmal_port_format_commit.restype = MMAL_STATUS_T
 
-MMAL_PORT_BH_CB_T = ct.POINTER(
-        ct.CFUNCTYPE(
-            None,
-            ct.POINTER(MMAL_PORT_T), ct.POINTER(MMAL_BUFFER_HEADER_T))
-        )
+MMAL_PORT_BH_CB_T = ct.CFUNCTYPE(
+    None,
+    ct.POINTER(MMAL_PORT_T), ct.POINTER(MMAL_BUFFER_HEADER_T))
 
 mmal_port_enable = _lib.mmal_port_enable
-mmal_port_enable.argtypes = [ct.POINTER(MMAL_PORT_T), MMAL_PORT_BH_CB_T]
+mmal_port_enable.argtypes = [ct.POINTER(MMAL_PORT_T), ct.POINTER(MMAL_PORT_BH_CB_T)]
 mmal_port_enable.restype = MMAL_STATUS_T
 
 mmal_port_disable = _lib.mmal_port_disable
@@ -1633,16 +1629,12 @@ class MMAL_POOL_T(ct.Structure):
         ('header',      ct.POINTER(ct.POINTER(MMAL_BUFFER_HEADER_T))),
         ]
 
-mmal_pool_allocator_alloc_t = ct.POINTER(
-        ct.CFUNCTYPE(
-            None,
-            ct.c_void_p, ct.c_uint32)
-        )
-mmal_pool_allocator_free_t = ct.POINTER(
-        ct.CFUNCTYPE(
-            None,
-            ct.c_void_p, ct.c_void_p)
-        )
+mmal_pool_allocator_alloc_t = ct.CFUNCTYPE(
+    None,
+    ct.c_void_p, ct.c_uint32)
+mmal_pool_allocator_free_t = ct.CFUNCTYPE(
+    None,
+    ct.c_void_p, ct.c_void_p)
 
 mmal_pool_create = _lib.mmal_pool_create
 mmal_pool_create.argtypes = [ct.c_uint, ct.c_uint32]
@@ -1653,8 +1645,8 @@ mmal_pool_create_with_allocator.argtypes = [
         ct.c_uint,
         ct.c_uint32,
         ct.c_void_p,
-        mmal_pool_allocator_alloc_t,
-        mmal_pool_allocator_free_t,
+        ct.POINTER(mmal_pool_allocator_alloc_t),
+        ct.POINTER(mmal_pool_allocator_free_t),
         ]
 mmal_pool_create_with_allocator.restype = ct.POINTER(MMAL_POOL_T)
 
@@ -1666,18 +1658,16 @@ mmal_pool_resize = _lib.mmal_pool_resize
 mmal_pool_resize.argtypes = [ct.POINTER(MMAL_POOL_T), ct.c_uint, ct.c_uint32]
 mmal_pool_resize.restype = MMAL_STATUS_T
 
-MMAL_POOL_BH_CB_T = ct.POINTER(
-        ct.CFUNCTYPE(
-            MMAL_BOOL_T,
-            ct.POINTER(MMAL_POOL_T), ct.POINTER(MMAL_BUFFER_HEADER_T), ct.c_void_p)
-        )
+MMAL_POOL_BH_CB_T = ct.CFUNCTYPE(
+    MMAL_BOOL_T,
+    ct.POINTER(MMAL_POOL_T), ct.POINTER(MMAL_BUFFER_HEADER_T), ct.c_void_p)
 
 mmal_pool_callback_set = _lib.mmal_pool_callback_set
-mmal_pool_callback_set.argtypes = [ct.POINTER(MMAL_POOL_T), MMAL_POOL_BH_CB_T]
+mmal_pool_callback_set.argtypes = [ct.POINTER(MMAL_POOL_T), ct.POINTER(MMAL_POOL_BH_CB_T)]
 mmal_pool_callback_set.restype = None
 
 mmal_pool_pre_release_callback_set = _lib.mmal_pool_pre_release_callback_set
-mmal_pool_pre_release_callback_set.argtypes = [ct.POINTER(MMAL_POOL_T), MMAL_BH_PRE_RELEASE_CB_T, ct.c_void_p]
+mmal_pool_pre_release_callback_set.argtypes = [ct.POINTER(MMAL_POOL_T), ct.POINTER(MMAL_BH_PRE_RELEASE_CB_T), ct.c_void_p]
 mmal_pool_pre_release_callback_set.restype = None
 
 # mmal_events.h ##############################################################
