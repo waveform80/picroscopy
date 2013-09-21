@@ -149,6 +149,7 @@ def capture_image(dest, settings):
         finally:
             start_preview(settings)
 
+
 def int_property(value, min_value, max_value, name):
     value = int(value)
     if not (min_value <= value <= max_value):
@@ -224,18 +225,11 @@ class PicroscopyCamera(object):
         start_preview(self)
 
     def __len__(self):
-        return sum(
-            1 for f in os.listdir(self.images_dir)
-            if f.endswith('.jpg')
-            and os.path.exists(os.path.join(self.images_dir, f))
-            )
+        return sum(1 for f in os.listdir(self.images_dir) if f.endswith('.jpg'))
 
     def __iter__(self):
         for f in sorted(os.listdir(self.images_dir)):
-            if (
-                    f.endswith('.jpg') and
-                    os.path.exists(os.path.join(self.images_dir, f))
-                    ):
+            if f.endswith('.jpg'):
                 yield f
 
     def __contains__(self, value):
