@@ -89,11 +89,18 @@ latex_documents = [
 
 man_pages = [
     (
-        'picroscopy',                     # source start file
+        'commandline',                    # source start file
         picroscopy.__name__,              # page name
-        '%s Documentation' % project,     # description
+        '%s Command Line' % project,      # description
         [picroscopy.__author__],          # author list
         1,                                # manual section
+        ),
+    (
+        'configuration',                  # source start file
+        picroscopy.__name__ + '.ini',     # page name
+        '%s Configuration' % project,     # description
+        [picroscopy.__author__],          # author list
+        5,                                # manual section
         ),
 ]
 

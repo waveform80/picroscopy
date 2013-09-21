@@ -1,8 +1,8 @@
-.. _picroscopy:
+.. _commandline:
 
-==========
-picroscopy
-==========
+======================
+Command Line Reference
+======================
 
 The picroscopy application launches a live view of the Raspberry Pi's camera
 and serves a web application providing control of the camera. Various options
@@ -39,7 +39,7 @@ Description
 .. option:: -c CONFIG, --config CONFIG
 
     Specify the configuration file that the application should load. See the
-    :ref:`config` section for more information on the configuration file
+    :ref:`configuration` section for more information on the configuration file
     format.
 
 .. option:: -q, --quiet
@@ -128,58 +128,6 @@ Description
 
     The path to the raspbistill binary to use. Defaults to
     ``/usr/bin/raspistill``.
-
-
-Configuration Files
-===================
-
-Configuration files are read (by default) from the following locations, in the
-order presented (i.e. values found in later files override values found in
-earlier files):
-
-1. ``/etc/picroscopy.ini``
-
-2. ``/usr/local/etc/picroscopy.ini``
-
-3. ``~/.picroscopy.ini`` (where ``~`` represents the current user's home
-   directory)
-
-You can manually specify a configuration to load with the :option:`-c` option.
-In this case, the manually specified configuration will be read last, ensuring
-its values take precedence over any values read from the files listed above.
-
-Picroscopy's configuration format is based on the familiar INI-file format. The
-configuration file must have a ``[picroscopy]`` section (Picroscopy will ignore
-other sections within the file), which contains ``key=value`` entries on
-separate lines. Key names are case insensitive.  Key names and values may have
-leading or trailing whitespace which will be ignored.  Blank lines are ignored,
-as are comments which are whole lines prefixed with either ``#`` or ``;``.
-
-An example configuration file is shown below::
-
-  [picroscopy]
-
-  ; Blank lines are ignored, as is this line, which is a comment
-  # This is also a comment
-
-  ; Spaces surrounding keys and values are ignored...
-    listen = 127.0.0.1:8000
-  clients = 127.0.0.0/8
-
-  ; Case is ignored for key names
-  IMAGES_DIR=/tmp/picroscopy_images
-  Thumbs_Dir=/tmp/picroscopy_thumbs
-
-The key names which can appear in the configuration file are the same as the
-available "long-style" command line options documented above, with the caveat
-that leading dashes are stripped and any dashes within the option are replaced
-by underscore. Hence the :option:`--images-dir` option becomes the
-``images_dir`` key within the configuration file.
-
-Two example configuration files are shipped with Picroscopy:
-``picroscopy.ini`` which contains a configuration suitable for normal usage,
-and ``development.ini`` which contains values suitable for development
-purposes.
 
 
 Examples

@@ -10,9 +10,12 @@ line. It also provides rudimentary guidance on configuration of the `Raspbian`_
 operating system under the assumption that this is the operating system most
 users will be using for Picroscopy.
 
-  .. note:: If any users wish to use Picroscopy with `Arch Linux`_ (the other
+.. note::
+    If any users wish to use Picroscopy with `Arch Linux`_ (the other
     major distro available for the Raspberry Pi platform), please feel free to
-    submit documentation patches to the author.
+    submit documentation patches to the author. If you are reading this on
+    `ReadTheDocs`_, this can be done trivially with the ``Edit on GitHub`` link
+    on the left of the page.
 
 
 .. _networking:
@@ -21,8 +24,8 @@ Network configuration
 =====================
 
 The ``/etc/network/interfaces`` file holds the network configuration under
-Raspbian. The default configuration which is shown below, attempts to obtain an
-IP address via DHCP::
+`Raspbian`_. The default configuration which is shown below, attempts to obtain
+an IP address via DHCP::
 
     iface eth0 inet dhcp
 
@@ -73,16 +76,38 @@ options is:
 
 3. default
 
-The Picroscopy application does not fork like a daemon once started. As it is
-a single user application that utilizes the Raspberry Pi's display there is
+The Picroscopy application does not fork like a daemon once started. As it is a
+single user application that utilizes the Raspberry Pi's display there is
 little point in running as a system daemon, despite using a web interface.
+Furthermore, as the system monopolizes the Pi's display output, it is
+reasonable to expect that the application will be the only (visible)
+application running at any given time.
 
+To this end, you may wish to configure the system to start Picroscopy at boot
+time, and shut down (or reboot) the Pi when the application terminates. A
+simple method for accomplishing this is to write a bash script similar to the
+following::
 
-.. _config:
+    #!/bin/bash
+    picroscopy -c myconfig.ini
+    poweroff
 
-Configuration Files
-===================
+Simply change the last line to ``reboot`` if you wish to reboot when picroscopy
+exits instead of powering off the computer. Save this script as
+``/root/run_picroscopy.sh`` and make it executable by running the following
+command::
+
+    chmod +x /root/run_picroscopy.sh
+
+To run this script on startup (without interfering with the rest of the boot
+sequence), add the following to the end of ``/etc/rc.local``::
+
+    /root/run_picroscopy.sh &
+
+The ampersand (&) at the end of the line ensures the script is started in the
+background, permitting the rest of the boot sequence to continue.
 
 
 .. _Arch Linux: http://archlinuxarm.org/platforms/armv6/raspberry-pi
 .. _Raspbian: http://www.raspbian.org/
+.. _ReadTheDocs: http://picroscopy.readthedocs.org/

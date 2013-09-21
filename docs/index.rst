@@ -27,7 +27,8 @@ Table of Contents
    quickstart
    usage
    admin
-   picroscopy
+   commandline
+   configuration
    faq
    license
 
