@@ -1828,3 +1828,77 @@ MMAL_COMPONENT_DEFAULT_AUDIO_DECODER   = b"none"
 MMAL_COMPONENT_DEFAULT_AUDIO_RENDERER  = b"vc.ril.audio_render"
 MMAL_COMPONENT_DEFAULT_MIRACAST        = b"vc.miracast"
 
+# util/mmal_util_params.h ####################################################
+
+mmal_port_parameter_set_boolean = _lib.mmal_port_parameter_set_boolean
+mmal_port_parameter_set_boolean.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_uint32, MMAL_BOOL_T]
+mmal_port_parameter_set_boolean.restype = MMAL_STATUS_T
+
+mmal_port_parameter_get_boolean = _lib.mmal_port_parameter_get_boolean
+mmal_port_parameter_get_boolean.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_uint32, ct.POINTER(MMAL_BOOL_T)]
+mmal_port_parameter_get_boolean.restype = MMAL_STATUS_T
+
+mmal_port_parameter_set_uint64 = _lib.mmal_port_parameter_set_uint64
+mmal_port_parameter_set_uint64.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_uint32, ct.c_uint64]
+mmal_port_parameter_set_uint64.restype = MMAL_STATUS_T
+
+mmal_port_parameter_get_uint64 = _lib.mmal_port_parameter_get_uint64
+mmal_port_parameter_get_uint64.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_uint32, ct.POINTER(ct.c_uint64)]
+mmal_port_parameter_get_uint64.restype = MMAL_STATUS_T
+
+mmal_port_parameter_set_int64 = _lib.mmal_port_parameter_set_int64
+mmal_port_parameter_set_int64.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_uint32, ct.c_int64]
+mmal_port_parameter_set_int64.restype = MMAL_STATUS_T
+
+mmal_port_parameter_get_int64 = _lib.mmal_port_parameter_get_int64
+mmal_port_parameter_get_int64.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_uint32, ct.POINTER(ct.c_int64)]
+mmal_port_parameter_get_int64.restype = MMAL_STATUS_T
+
+mmal_port_parameter_set_uint32 = _lib.mmal_port_parameter_set_uint32
+mmal_port_parameter_set_uint32.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_uint32, ct.c_uint32]
+mmal_port_parameter_set_uint32.restype = MMAL_STATUS_T
+
+mmal_port_parameter_get_uint32 = _lib.mmal_port_parameter_get_uint32
+mmal_port_parameter_get_uint32.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_uint32, ct.POINTER(ct.c_uint32)]
+mmal_port_parameter_get_uint32.restype = MMAL_STATUS_T
+
+mmal_port_parameter_set_int32 = _lib.mmal_port_parameter_set_int32
+mmal_port_parameter_set_int32.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_uint32, ct.c_int32]
+mmal_port_parameter_set_int32.restype = MMAL_STATUS_T
+
+mmal_port_parameter_get_int32 = _lib.mmal_port_parameter_get_int32
+mmal_port_parameter_get_int32.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_uint32, ct.POINTER(ct.c_int32)]
+mmal_port_parameter_get_int32.restype = MMAL_STATUS_T
+
+mmal_port_parameter_set_rational = _lib.mmal_port_parameter_set_rational
+mmal_port_parameter_set_rational.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_uint32, MMAL_RATIONAL_T]
+mmal_port_parameter_set_rational.restype = MMAL_STATUS_T
+
+mmal_port_parameter_get_rational = _lib.mmal_port_parameter_get_rational
+mmal_port_parameter_get_rational.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_uint32, ct.POINTER(MMAL_RATIONAL_T)]
+mmal_port_parameter_get_rational.restype = MMAL_STATUS_T
+
+mmal_port_parameter_set_string = _lib.mmal_port_parameter_set_string
+mmal_port_parameter_set_string.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_uint32, ct.c_char_p]
+mmal_port_parameter_set_string.restype = MMAL_STATUS_T
+
+mmal_port_parameter_set_bytes = _lib.mmal_port_parameter_set_bytes
+mmal_port_parameter_set_bytes.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_uint32, ct.POINTER(ct.c_uint8), ct.c_uint]
+mmal_port_parameter_set_bytes.restype = MMAL_STATUS_T
+
+mmal_port_parameter_set_uri = _lib.mmal_port_parameter_set_uri
+mmal_port_parameter_set_uri.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_char_p]
+mmal_port_parameter_set_uri.restype = MMAL_STATUS_T
+
+mmal_util_set_display_region = _lib.mmal_util_set_display_region
+mmal_util_set_display_region.argtypes = [ct.POINTER(MMAL_PORT_T), ct.POINTER(MMAL_DISPLAYREGION_T)]
+mmal_util_set_display_region.restype = MMAL_STATUS_T
+
+mmal_util_camera_use_stc_timestamp = _lib.mmal_util_camera_use_stc_timestamp
+mmal_util_camera_use_stc_timestamp.argtypes = [ct.POINTER(MMAL_PORT_T), MMAL_CAMERA_STC_MODE_T]
+mmal_util_camera_use_stc_timestamp.restype = MMAL_STATUS_T
+
+mmal_util_get_core_port_stats = _lib.mmal_util_get_core_port_stats
+mmal_util_get_core_port_stats.argtypes = [ct.POINTER(MMAL_PORT_T), MMAL_CORE_STATS_DIR, MMAL_BOOL_T, ct.POINTER(MMAL_CORE_STATISTICS_T)]
+mmal_util_get_core_port_stats.restype = MMAL_STATUS_T
+
