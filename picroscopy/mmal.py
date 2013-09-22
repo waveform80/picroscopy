@@ -1886,9 +1886,9 @@ mmal_port_parameter_set_bytes = _lib.mmal_port_parameter_set_bytes
 mmal_port_parameter_set_bytes.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_uint32, ct.POINTER(ct.c_uint8), ct.c_uint]
 mmal_port_parameter_set_bytes.restype = MMAL_STATUS_T
 
-mmal_port_parameter_set_uri = _lib.mmal_port_parameter_set_uri
-mmal_port_parameter_set_uri.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_char_p]
-mmal_port_parameter_set_uri.restype = MMAL_STATUS_T
+mmal_util_port_set_uri = _lib.mmal_util_port_set_uri
+mmal_util_port_set_uri.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_char_p]
+mmal_util_port_set_uri.restype = MMAL_STATUS_T
 
 mmal_util_set_display_region = _lib.mmal_util_set_display_region
 mmal_util_set_display_region.argtypes = [ct.POINTER(MMAL_PORT_T), ct.POINTER(MMAL_DISPLAYREGION_T)]
