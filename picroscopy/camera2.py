@@ -63,7 +63,7 @@ class PiCamera(object):
                 mmal.MMAL_COMPONENT_DEFAULT_CAMERA, self._camera),
             prefix="Failed to create camera component")
         try:
-            if not camera[0].output_num:
+            if not self._camera[0].output_num:
                 raise PiCameraError("Camera doesn't have output ports")
 
             self._check(
@@ -73,9 +73,9 @@ class PiCamera(object):
                 prefix="Unable to enable control port")
 
             self._check(
-                mmal.port_parameter_set(
+                mmal.mmal_port_parameter_set(
                     self._camera[0].control,
-                    mmal.MMAL_PARAMETER_CAMERA_CONFIG_T(
+                    ct.cast(mmal.MMAL_PARAMETER_CAMERA_CONFIG_T(
                         mmal.MMAL_PARAMETER_HEADER_T(
                             mmal.MMAL_PARAMETER_CAMERA_CONFIG,
                             ct.sizeof(mmal.MMAL_PARAMETER_CAMERA_CONFIG_T)
@@ -90,7 +90,7 @@ class PiCamera(object):
                         stills_capture_circular_buffer_height=0,
                         fast_preview_resume=0,
                         use_stc_timestamp=mmal.MMAL_PARAM_TIMESTAMP_MODE_RESET_STC,
-                        )
+                        ), ct.POINTER(mmal.MMAL_PARAMETER_HEADER_T))
                     ),
                 prefix="Camera control port couldn't be configured")
 
@@ -276,7 +276,7 @@ class PiCamera(object):
         try:
             self._check(mmal.mmal_port_parameter_set(
                 self._camera[0].control,
-                mmal.MMAL_PARAMETER_EXPOSUREMETERINGMODE_T(
+                ct.cast(mmal.MMAL_PARAMETER_EXPOSUREMETERINGMODE_T(
                     mmal.MMAL_PARAMETER_HEADER_T(
                         mmal.MMAL_PARAMETER_EXP_METERING_MODE,
                         ct.sizeof(mmal.PARAMETER_EXPOSUREMETERINGMODE_T)
@@ -287,7 +287,7 @@ class PiCamera(object):
                         'backlit': mmal.MMAL_PARAM_EXPOSUREMETERINGMODE_BACKLIT,
                         'matrix':  mmal.MMAL_PARAM_EXPOSUREMETERINGMODE_MATRIX,
                         }[value]
-                    )
+                    ), ct.POINTER(mmal.MMAL_PARAMETER_HEADER_T))
                 ),
                 prefix="Failed to set meter mode")
             self._meter_mode = value
@@ -337,7 +337,7 @@ class PiCamera(object):
         try:
             self._check(mmal.mmal_port_parameter_set(
                 self._camera[0].control,
-                mmal.MMAL_PARAMETER_EXPOSUREMODE_T(
+                ct.cast(mmal.MMAL_PARAMETER_EXPOSUREMODE_T(
                     mmal.MMAL_PARAMETER_HEADER_T(
                         mmal.MMAL_PARAMETER_EXPOSURE_MODE,
                         ct.sizeof(mmal.MMAL_PARAMETER_EXPOSUREMODE_T)
@@ -357,7 +357,7 @@ class PiCamera(object):
                         'antishake':     mmal.MMAL_PARAM_EXPOSUREMODE_ANTISHAKE,
                         'fireworks':     mmal.MMAL_PARAM_EXPOSUREMODE_FIREWORKS,
                         }[value]
-                    )
+                    ), ct.POINTER(mmal.MMAL_PARAMETER_HEADER_T))
                 ),
                 prefix="Failed to set exposure mode")
             self._exposure_mode = value
@@ -371,7 +371,7 @@ class PiCamera(object):
         try:
             self._check(mmal.mmal_port_parameter_set(
                 self._camera[0].control,
-                mmal.MMAL_PARAMETER_AWBMODE_T(
+                ct.cast(mmal.MMAL_PARAMETER_AWBMODE_T(
                     mmal.MMAL_PARAMETER_HEADER_T(
                         mmal.MMAL_PARAMETER_AWB_MODE,
                         ct.sizeof(mmal.MMAL_PARAMETER_AWBMODE_T)
@@ -388,7 +388,7 @@ class PiCamera(object):
                         'flash':         mmal.MMAL_PARAM_AWBMODE_FLASH,
                         'horizon':       mmal.MMAL_PARAM_AWBMODE_HORIZON,
                         }[value]
-                    )
+                    ), ct.POINTER(mmal.MMAL_PARAMETER_HEADER_T))
                 ),
                 prefix="Failed to set auto-white-balance mode")
             self._awb_mode = value
@@ -402,7 +402,7 @@ class PiCamera(object):
         try:
             self._check(mmal.mmal_port_parameter_set(
                 self._camera[0].control,
-                mmal.MMAL_PARAMETER_IMAGEFX_T(
+                ct.cast(mmal.MMAL_PARAMETER_IMAGEFX_T(
                     mmal.MMAL_PARAMETER_HEADER_T(
                         mmal.MMAL_PARAMETER_IMAGE_EFFECT,
                         ct.sizeof(mmal.MMAL_PARAMETER_IMAGEFX_T)
@@ -419,7 +419,7 @@ class PiCamera(object):
                         'flash':         mmal.MMAL_PARAM_IMAGEFX_FLASH,
                         'horizon':       mmal.MMAL_PARAM_IMAGEFX_HORIZON,
                         }[value]
-                    )
+                    ), ct.POINTER(mmal.MMAL_PARAMETER_HEADER_T))
                 ),
                 prefix="Failed to set image effect")
             self._image_effect = value
@@ -441,13 +441,13 @@ class PiCamera(object):
                 raise PiCameraValueError("Invalid color effect (u, v) tuple: %s" % value)
         self._check(mmal.mmal_port_parameter_set(
             self._camera[0].control,
-            mmal.MMAL_PARAMETER_COLOURFX_T(
+            ct.cast(mmal.MMAL_PARAMETER_COLOURFX_T(
                 mmal.MMAL_PARAMETER_HEADER_T(
                     mmal.MMAL_PARAMETER_COLOUR_EFFECT,
                     ct.sizeof(mmal.MMAL_PARAMETER_COLOURFX_T)
                     ),
                 enable, u, v
-                )
+                ), ct.POINTER(mmal.MMAL_PARAMETER_HEADER_T))
             ),
             prefix="Failed to set color effects")
         self._color_effects = value
@@ -477,7 +477,7 @@ class PiCamera(object):
         for p in self.MMAL_CAMERA_PORTS:
             self._check(mmal.mmal_port_parameter_set(
                 self._camera[0].output[p],
-                mmal.MMAL_PARAMETER_MIRROR_T(
+                ct.cast(mmal.MMAL_PARAMETER_MIRROR_T(
                     mmal.MMAL_PARAMETER_HEADER_T(
                         mmal.MMAL_PARAMETER_MIRROR,
                         ct.sizeof(mmal.MMAL_PARAMETER_MIRROR_T)
@@ -488,7 +488,7 @@ class PiCamera(object):
                         (False, True):  mmal.MMAL_PARAM_MIRROR_HORIZONTAL,
                         (True,  True):  mmal.MMAL_PARAM_MIRROR_BOTH,
                         }[(value, self.hflip)]
-                    )
+                    ), ct.POINTER(mmal.MMAL_PARAMETER_HEADER_T))
                 ),
                 prefix="Failed to set vertical flip")
         self._vflip = value
@@ -501,7 +501,7 @@ class PiCamera(object):
         for p in self.MMAL_CAMERA_PORTS:
             self._check(mmal.mmal_port_parameter_set(
                 self._camera[0].output[p],
-                mmal.MMAL_PARAMETER_MIRROR_T(
+                ct.cast(mmal.MMAL_PARAMETER_MIRROR_T(
                     mmal.MMAL_PARAMETER_HEADER_T(
                         mmal.MMAL_PARAMETER_MIRROR,
                         ct.sizeof(mmal.MMAL_PARAMETER_MIRROR_T)
@@ -512,7 +512,7 @@ class PiCamera(object):
                         (False, True):  mmal.MMAL_PARAM_MIRROR_HORIZONTAL,
                         (True,  True):  mmal.MMAL_PARAM_MIRROR_BOTH,
                         }[(self.vflip, value)]
-                    )
+                    ), ct.POINTER(mmal.MMAL_PARAMETER_HEADER_T))
                 ),
                 prefix="Failed to set horizontal flip")
         self._hflip = value
@@ -527,7 +527,7 @@ class PiCamera(object):
             raise PiCameraValueError("Invalid crop rectangle (x, y, w, h) tuple: %s" % value)
         self._check(mmal.mmal_port_parameter_set(
             self._camera[0].control,
-            mmal.MMAL_PARAMETER_INPUT_CROP_T(
+            ct.cast(mmal.MMAL_PARAMETER_INPUT_CROP_T(
                 mmal.MMAL_PARAMETER_HEADER_T(
                     mmal.MMAL_PARAMETER_INPUT_CROP,
                     ct.sizeof(mmal.MMAL_PARAMETER_INPUT_CROP)
@@ -538,7 +538,7 @@ class PiCamera(object):
                     int(65535 * w),
                     int(65535 * h)
                     ),
-            ),
-            prefix="Failed to set crop")
+                ), ct.POINTER(mmal.MMAL_PARAMETER_HEADER_T))
+            prefix="Failed to set crop"))
         self._crop = value
     crop = property(_get_crop, _set_crop)
