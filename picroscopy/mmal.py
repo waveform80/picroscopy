@@ -1956,3 +1956,56 @@ mmal_connection_event_format_changed = _lib.mmal_connection_event_format_changed
 mmal_connection_event_format_changed.argtypes = [ct.POINTER(MMAL_CONNECTION_T), ct.POINTER(MMAL_BUFFER_HEADER_T)]
 mmal_connection_event_format_changed.restype = MMAL_STATUS_T
 
+# util/mmal_util.h ###########################################################
+
+mmal_status_to_string = _lib.mmal_status_to_string
+mmal_status_to_string.argtypes = [MMAL_STATUS_T]
+mmal_status_to_string.restype = ct.c_char_p
+
+mmal_encoding_stride_to_width = _lib.mmal_encoding_stride_to_width
+mmal_encoding_stride_to_width.argtypes = [ct.c_uint32, ct.c_uint32]
+mmal_encoding_stride_to_width.restype = ct.c_uint32
+
+mmal_encoding_width_to_stride = _lib.mmal_encoding_width_to_stride
+mmal_encoding_width_to_stride.argtypes = [ct.c_uint32, ct.c_uint32]
+mmal_encoding_width_to_stride.restype = ct.c_uint32
+
+mmal_port_type_to_string = _lib.mmal_port_type_to_string
+mmal_port_type_to_string.argtypes = [MMAL_PORT_TYPE_T]
+mmal_port_type_to_string.restype = ct.c_char_p
+
+mmal_port_parameter_alloc_get = _lib.mmal_port_parameter_alloc_get
+mmal_port_parameter_alloc_get.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_uint32, ct.c_uint32, ct.POINTER(MMAL_STATUS_T)]
+mmal_port_parameter_alloc_get.restype = ct.POINTER(MMAL_PARAMETER_HEADER_T)
+
+mmal_port_parameter_free = _lib.mmal_port_parameter_free
+mmal_port_parameter_free.argtypes = [ct.POINTER(MMAL_PARAMETER_HEADER_T)]
+mmal_port_parameter_free.restype = None
+
+mmal_buffer_header_copy_header = _lib.mmal_buffer_header_copy_header
+mmal_buffer_header_copy_header.argtypes = [ct.POINTER(MMAL_BUFFER_HEADER_T), ct.POINTER(MMAL_BUFFER_HEADER_T)]
+mmal_buffer_header_copy_header.restype = None
+
+mmal_port_pool_create = _lib.mmal_port_pool_create
+mmal_port_pool_create.argtypes = [ct.POINTER(MMAL_PORT_T), ct.c_uint, ct.c_uint32]
+mmal_port_pool_create.restype = ct.POINTER(MMAL_POOL_T)
+
+mmal_port_pool_destroy = _lib.mmal_port_pool_destroy
+mmal_port_pool_destroy.argtypes = [ct.POINTER(MMAL_PORT_T), ct.POINTER(MMAL_POOL_T)]
+mmal_port_pool_destroy.restype = None
+
+mmal_log_dump_port = _lib.mmal_log_dump_port
+mmal_log_dump_port.argtypes = [ct.POINTER(MMAL_PORT_T)]
+mmal_log_dump_port.restype = None
+
+mmal_log_dump_format = _lib.mmal_log_dump_format
+mmal_log_dump_format.argtypes = [ct.POINTER(MMAL_ES_FORMAT_T)]
+mmal_log_dump_format.restype = None
+
+mmal_util_get_port = _lib.mmal_util_get_port
+mmal_util_get_port.argtypes = [ct.POINTER(MMAL_COMPONENT_T), MMAL_PORT_TYPE_T, ct.c_uint]
+mmal_util_get_port.restype = ct.POINTER(MMAL_PORT_T)
+
+mmal_4cc_to_string = _lib.mmal_4cc_to_string
+mmal_4cc_to_string.argtypes = [ct.c_char_p, ct.c_size_t, ct.c_uint32]
+mmal_4cc_to_string.restype = ct.c_char_p
