@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import time
 import ctypes as ct
 
 import picroscopy.mmal as mmal
@@ -39,24 +40,45 @@ class PiCamera(object):
     VIDEO_OUTPUT_BUFFERS_NUM = 3
     DEFAULT_WIDTH = 1920
     DEFAULT_HEIGHT = 1080
+    PREVIEW_LAYER = 2
+    PREVIEW_OPACITY = 255
+    PREVIEW_FRAME_RATE_NUM = 30
+    PREVIWE_FRAME_RATE_DEN = 1
 
     def __init__(self):
+        bcm_host.bcm_host_init()
         self._camera = None
         self._preview = None
+        self._preview_connection = None
         self._encoder = None
         self._encoder_pool = None
+        self._encoder_connection = None
         self._create_camera()
         self._create_preview()
         self._create_encoder()
+        self._connect_ports()
 
     def close(self):
+        if self._camera and self._camera[0].output[self.MMAL_CAMERA_CAPTURE_PORT][0].is_enabled:
+            mmal.mmal_port_disable(self._camera[0].output[self.MMAL_CAMERA_CAPTURE_PORT])
+        if self._encoder and self._encoder[0].output[0][0].is_enabled:
+            mmal.mmal_port_disable(self._encoder[0].output[0])
+        if self._preview_connection:
+            mmal.mmal_connection_destroy(self._preview_connection)
+        if self._encoder_connection:
+            mmal.mmal_connection_destroy(self._encoder_connection)
+        if self._encoder:
+            mmal.mmal_component_disable(self._encoder)
+        if self._preview:
+            mmal.mmal_component_disable(self._preview)
+        if self._camera:
+            mmal.mmal_component_disable(self._camera)
         self._destroy_encoder()
         self._destroy_preview()
         self._destroy_camera()
 
     def _create_camera(self):
         assert not self._camera
-        bcm_host.bcm_host_init()
         self._camera = ct.POINTER(mmal.MMAL_COMPONENT_T)()
         self._check(
             mmal.mmal_component_create(
@@ -138,7 +160,7 @@ class PiCamera(object):
             self.hflip = self.vflip = False
             self.crop = (0.0, 0.0, 1.0, 1.0)
         except PiCameraError:
-            mmal.mmal_component_destroy(self._camera)
+            self._destroy_camera()
             raise
 
     def _destroy_camera(self):
@@ -147,7 +169,37 @@ class PiCamera(object):
             self._camera = None
 
     def _create_preview(self):
-        pass
+        self._preview = ct.POINTER(mmal.MMAL_COMPONENT_T)()
+        self._check(
+            mmal.mmal_component_create(
+                mmal.MMAL_COMPONENT_DEFAULT_VIDEO_RENDERER, self._preview),
+            prefix="Failed to create preview component")
+        try:
+            if not self._preview[0].input_num:
+                raise PiCameraError("No input ports on preview component")
+
+            mp = mmal.MMAL_DISPLAYREGION_T(
+                mmal.MMAL_PARAMETER_HEADER_T(
+                    mmal.MMAL_PARAMETER_DISPLAYREGION,
+                    ct.sizeof(mmal.MMAL_DISPLAYREGION_T)
+                    ),
+                )
+            mp.set = mmal.MMAL_DISPLAY_SET_LAYER
+            mp.layer = self.PREVIEW_LAYER
+            mp.set |= mmal.MMAL_DISPLAY_SET_ALPHA
+            mp.alpha = self.PREVIEW_OPACITY
+            mp.set |= mmal.MMAL_DISPLAY_SET_FULLSCREEN
+            mp.fullscreen = 1
+            self._check(
+                mmal.mmal_port_parameter_set(self._preview[0].input[0], mp.hdr),
+                prefix="Unable to set preview port parameters")
+
+            self._check(
+                mmal.mmal_component_enable(self._preview),
+                prefix="Preview component couldn't be enabled")
+        except PiCameraError:
+            self._destroy_preview()
+            raise
 
     def _destroy_preview(self):
         if self._preview:
@@ -164,6 +216,16 @@ class PiCamera(object):
         if self._encoder:
             mmal.mmal_component_destroy(self._encoder)
             self._encoder = None
+
+    def _connect_ports(self):
+        self._preview_connection = ct.POINTER(mmal.MMAL_CONNECTION_T)()
+        self._check(
+            mmal.mmal_connection_create(
+                self._preview_connection,
+                self._camera[0].output[self.MMAL_CAMERA_PREVIEW_PORT],
+                self._preview[0].input[0],
+                mmal.MMAL_CONNECTION_FLAG_TUNNELLING | mmal.MMAL_CONNECTION_FLAG_ALLOCATION_ON_INPUT),
+            prefix="Failed to connect camera to preview")
 
     def _check(self, status, prefix=""):
         if status != mmal.MMAL_SUCCESS:
@@ -550,4 +612,8 @@ class PiCamera(object):
 
 if __name__ == '__main__':
     camera = PiCamera()
-    camera.close()
+    try:
+        while True:
+            time.sleep(500)
+    finally:
+        camera.close()
