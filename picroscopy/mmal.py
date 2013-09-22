@@ -1491,13 +1491,10 @@ mmal_port_event_get.restype = MMAL_STATUS_T
 class MMAL_COMPONENT_PRIVATE_T(ct.Structure):
     _fields_ = []
 
-class MMAL_COMPONENT_USERDATA_T(ct.Structure):
-    _fields_ = []
-
 class MMAL_COMPONENT_T(ct.Structure):
     _fields_ = [
         ('priv',       ct.POINTER(MMAL_COMPONENT_PRIVATE_T)),
-        ('userdata',   ct.POINTER(MMAL_COMPONENT_USERDATA_T)),
+        ('userdata',   ct.c_void_p),
         ('name',       ct.c_char_p),
         ('is_enabled', ct.c_uint32),
         ('control',    ct.POINTER(MMAL_PORT_T)),
