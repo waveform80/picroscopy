@@ -132,7 +132,7 @@ class PiCamera(object):
             self.exposure_mode = 'auto'
             self.meter_mode = 'average'
             self.awb_mode = 'auto'
-            self.image_effect = None
+            self.image_effect = 'none'
             self.color_effects = None
             self.rotation = 0
             self.hflip = self.vflip = False
@@ -242,7 +242,7 @@ class PiCamera(object):
         return self._brightness
     def _set_brightness(self, value):
         try:
-            if 0 <= value <= 100:
+            if not (0 <= value <= 100):
                 raise PiCameraValueError("Invalid brightness value: %d (valid range 0..100)" % value)
         except TypeError:
             raise PiCameraValueError("Invalid brightness value: %s" % value)
@@ -275,7 +275,7 @@ class PiCamera(object):
             mp = mmal.MMAL_PARAMETER_EXPOSUREMETERINGMODE_T(
                 mmal.MMAL_PARAMETER_HEADER_T(
                     mmal.MMAL_PARAMETER_EXP_METERING_MODE,
-                    ct.sizeof(mmal.PARAMETER_EXPOSUREMETERINGMODE_T)
+                    ct.sizeof(mmal.MMAL_PARAMETER_EXPOSUREMETERINGMODE_T)
                     ),
                 {
                     'average': mmal.MMAL_PARAM_EXPOSUREMETERINGMODE_AVERAGE,
@@ -401,16 +401,29 @@ class PiCamera(object):
                     ct.sizeof(mmal.MMAL_PARAMETER_IMAGEFX_T)
                     ),
                 {
-                    'off':           mmal.MMAL_PARAM_IMAGEFX_OFF,
-                    'auto':          mmal.MMAL_PARAM_IMAGEFX_AUTO,
-                    'sunlight':      mmal.MMAL_PARAM_IMAGEFX_SUNLIGHT,
-                    'cloudy':        mmal.MMAL_PARAM_IMAGEFX_CLOUDY,
-                    'shade':         mmal.MMAL_PARAM_IMAGEFX_SHADE,
-                    'tungsten':      mmal.MMAL_PARAM_IMAGEFX_TUNGSTEN,
-                    'fluorescent':   mmal.MMAL_PARAM_IMAGEFX_FLUORESCENT,
-                    'incandescent':  mmal.MMAL_PARAM_IMAGEFX_INCANDESCENT,
-                    'flash':         mmal.MMAL_PARAM_IMAGEFX_FLASH,
-                    'horizon':       mmal.MMAL_PARAM_IMAGEFX_HORIZON,
+                    'none':          mmal.MMAL_PARAM_IMAGEFX_NONE,
+                    'negative':      mmal.MMAL_PARAM_IMAGEFX_NEGATIVE,
+                    'solarize':      mmal.MMAL_PARAM_IMAGEFX_SOLARIZE,
+                    'posterize':     mmal.MMAL_PARAM_IMAGEFX_POSTERIZE,
+                    'whiteboard':    mmal.MMAL_PARAM_IMAGEFX_WHITEBOARD,
+                    'blackboard':    mmal.MMAL_PARAM_IMAGEFX_BLACKBOARD,
+                    'sketch':        mmal.MMAL_PARAM_IMAGEFX_SKETCH,
+                    'denoise':       mmal.MMAL_PARAM_IMAGEFX_DENOISE,
+                    'emboss':        mmal.MMAL_PARAM_IMAGEFX_EMBOSS,
+                    'oilpaint':      mmal.MMAL_PARAM_IMAGEFX_OILPAINT,
+                    'hatch':         mmal.MMAL_PARAM_IMAGEFX_HATCH,
+                    'gpen':          mmal.MMAL_PARAM_IMAGEFX_GPEN,
+                    'pastel':        mmal.MMAL_PARAM_IMAGEFX_PASTEL,
+                    'watercolour':   mmal.MMAL_PARAM_IMAGEFX_WATERCOLOUR,
+                    'film':          mmal.MMAL_PARAM_IMAGEFX_FILM,
+                    'blur':          mmal.MMAL_PARAM_IMAGEFX_BLUR,
+                    'saturation':    mmal.MMAL_PARAM_IMAGEFX_SATURATION,
+                    'colourswap':    mmal.MMAL_PARAM_IMAGEFX_COLOURSWAP,
+                    'washedout':     mmal.MMAL_PARAM_IMAGEFX_WASHEDOUT,
+                    'posterise':     mmal.MMAL_PARAM_IMAGEFX_POSTERISE,
+                    'colourpoint':   mmal.MMAL_PARAM_IMAGEFX_COLOURPOINT,
+                    'colourbalance': mmal.MMAL_PARAM_IMAGEFX_COLOURBALANCE,
+                    'cartoon':       mmal.MMAL_PARAM_IMAGEFX_CARTOON,
                     }[value]
                 )
             self._check(
@@ -455,7 +468,7 @@ class PiCamera(object):
             raise PiCameraValueError("Invalid rotation angle: %s" % value)
         for p in self.MMAL_CAMERA_PORTS:
             self._check(mmal.mmal_port_parameter_set_int32(
-                camera[0].output[p],
+                self._camera[0].output[p],
                 mmal.MMAL_PARAMETER_ROTATION,
                 value
                 ),
@@ -519,7 +532,7 @@ class PiCamera(object):
         mp = mmal.MMAL_PARAMETER_INPUT_CROP_T(
             mmal.MMAL_PARAMETER_HEADER_T(
                 mmal.MMAL_PARAMETER_INPUT_CROP,
-                ct.sizeof(mmal.MMAL_PARAMETER_INPUT_CROP)
+                ct.sizeof(mmal.MMAL_PARAMETER_INPUT_CROP_T)
                 ),
             mmal.MMAL_RECT_T(
                 int(65535 * x),
@@ -533,3 +546,8 @@ class PiCamera(object):
             prefix="Failed to set crop")
         self._crop = value
     crop = property(_get_crop, _set_crop)
+
+
+if __name__ == '__main__':
+    camera = PiCamera()
+    camera.close()
