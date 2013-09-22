@@ -1902,3 +1902,60 @@ mmal_util_get_core_port_stats = _lib.mmal_util_get_core_port_stats
 mmal_util_get_core_port_stats.argtypes = [ct.POINTER(MMAL_PORT_T), MMAL_CORE_STATS_DIR, MMAL_BOOL_T, ct.POINTER(MMAL_CORE_STATISTICS_T)]
 mmal_util_get_core_port_stats.restype = MMAL_STATUS_T
 
+# util/mmal_connection.h #####################################################
+
+MMAL_CONNECTION_FLAG_TUNNELLING = 0x1
+MMAL_CONNECTION_FLAG_ALLOCATION_ON_INPUT = 0x2
+MMAL_CONNECTION_FLAG_ALLOCATION_ON_OUTPUT = 0x4
+
+class MMAL_CONNECTION_T(ct.Structure):
+    # Forward type declaration
+    pass
+
+MMAL_CONNECTION_CALLBACK_T = ct.CFUNCTYPE(
+    None,
+    ct.POINTER(MMAL_CONNECTION_T))
+
+MMAL_CONNECTION_T._fields_ = [
+    ('user_data',    ct.c_void_p),
+    ('callback',     ct.POINTER(MMAL_CONNECTION_CALLBACK_T)),
+    ('is_enabled',   ct.c_uint32),
+    ('flags',        ct.c_uint32),
+    ('in',           ct.POINTER(MMAL_PORT_T)),
+    ('out',          ct.POINTER(MMAL_PORT_T)),
+    ('pool',         ct.POINTER(MMAL_POOL_T)),
+    ('queue',        ct.POINTER(MMAL_QUEUE_T)),
+    ('name',         ct.c_char_p),
+    ('time_setup',   ct.c_int64),
+    ('time_enable',  ct.c_int64),
+    ('time_disable', ct.c_int64),
+    ]
+
+mmal_connection_create = _lib.mmal_connection_create
+mmal_connection_create.argtypes = [ct.POINTER(ct.POINTER(MMAL_CONNECTION_T)), ct.POINTER(MMAL_PORT_T), ct.POINTER(MMAL_PORT_T), ct.c_uint32]
+mmal_connection_create.restype = MMAL_STATUS_T
+
+mmal_connection_acquire = _lib.mmal_connection_acquire
+mmal_connection_acquire.argtypes = [ct.POINTER(MMAL_CONNECTION_T)]
+mmal_connection_acquire.restype = None
+
+mmal_connection_release = _lib.mmal_connection_release
+mmal_connection_release.argtypes = [ct.POINTER(MMAL_CONNECTION_T)]
+mmal_connection_release.restype = MMAL_STATUS_T
+
+mmal_connection_destroy = _lib.mmal_connection_destroy
+mmal_connection_destroy.argtypes = [ct.POINTER(MMAL_CONNECTION_T)]
+mmal_connection_destroy.restype = MMAL_STATUS_T
+
+mmal_connection_enable = _lib.mmal_connection_enable
+mmal_connection_enable.argtypes = [ct.POINTER(MMAL_CONNECTION_T)]
+mmal_connection_enable.restype = MMAL_STATUS_T
+
+mmal_connection_disable = _lib.mmal_connection_disable
+mmal_connection_disable.argtypes = [ct.POINTER(MMAL_CONNECTION_T)]
+mmal_connection_disable.restype = MMAL_STATUS_T
+
+mmal_connection_event_format_changed = _lib.mmal_connection_event_format_changed
+mmal_connection_event_format_changed.argtypes = [ct.POINTER(MMAL_CONNECTION_T), ct.POINTER(MMAL_BUFFER_HEADER_T)]
+mmal_connection_event_format_changed.restype = MMAL_STATUS_T
+
