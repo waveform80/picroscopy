@@ -33,7 +33,7 @@ DIST_ZIP=dist/$(NAME)-$(VER).zip
 all:
 	@echo "make install - Install on local system"
 	@echo "make develop - Install symlinks for development"
-	@echo "make test - Run tests through nose environment"
+	@echo "make test - Run tests"
 	@echo "make doc - Generate HTML and PDF documentation"
 	@echo "make source - Create source package"
 	@echo "make egg - Generate a PyPI egg package"
@@ -76,7 +76,7 @@ clean:
 	find $(CURDIR) -name "*.pyc" -delete
 
 tags: $(PY_SOURCES)
-	ctags -R --exclude="build/*" --exclude="debian/*" --exclude="windows/*" --exclude="docs/*" --languages="Python"
+	ctags -R --exclude="build/*" --exclude="debian/*" --exclude="docs/*" --languages="Python"
 
 $(DIST_TAR): $(PY_SOURCES)
 	$(PYTHON) $(PYFLAGS) setup.py sdist --formats gztar
@@ -97,10 +97,8 @@ release: $(PY_SOURCES) $(DOC_SOURCES)
 
 upload: $(PY_SOURCES) $(DOC_SOURCES)
 	# build a source archive and upload to PyPI
+	$(PYTHON) $(PYFLAGS) setup.py build_sphinx -b man
 	$(PYTHON) $(PYFLAGS) setup.py sdist upload
-	#$(PYTHON) $(PYFLAGS) setup.py build_sphinx -b man
-	$(PYTHON) $(PYFLAGS) setup.py sdist --dist-dir=../
 
 .PHONY: all install develop test doc source egg zip tar dist clean tags release upload
-
 
