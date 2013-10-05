@@ -54,6 +54,7 @@ except ImportError:
 from webob import Request, Response, exc
 from chameleon import PageTemplateLoader
 from wheezy.routing import PathRouter, url
+from picamera import PiCameraError
 
 from picroscopy.library import PicroscopyLibrary
 
@@ -176,6 +177,28 @@ class PicroscopyWsgiApp(object):
         """
         Configure the library and camera settings
         """
+        # Resolution is handled specially as the camera needs to stop the
+        # preview in order to change it
+        try:
+            new_resolution = tuple(
+                int(i) for i in req.params['resolution'].split('x', 1))
+            if len(new_resolution) != 2:
+                raise ValueError()
+        except ValueError:
+            self.flashes.append(
+                'Invalid resolution: %s' % req.params['resolution'])
+        if library.camera.resolution != new_resolution:
+            try:
+                library.camera.stop_preview()
+                try:
+                    library.camera.resolution = new_resolution
+                finally:
+                    library.camera.start_preview()
+            except PiCameraError:
+                self.flashes.append(
+                    'Unable to change camera resolution '
+                    'to %s' % req.params['resolution'])
+        # Everything else is handled generically...
         for setting in (
                 'sharpness', 'contrast', 'brightness', 'saturation', 'ISO',
                 'exposure-compensation'):

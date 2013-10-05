@@ -143,6 +143,20 @@
               </div>
             </div>
 
+            <div class="row advanced">
+              <div class="small-3 columns">
+                <label for="resolution" class="right inline">Resolution</label>
+              </div>
+              <div class="small-9 columns">
+                <select required name="resolution" id="resolution">
+                  <option value="1280x720" tal:attributes="selected camera.resolution==(1280, 720)">1280x720 (720p)</option>
+                  <option value="1920x1080" tal:attributes="selected camera.resolution==(1920, 1080)">1920x1080 (1080p)</option>
+                  <option value="2592x1458" tal:attributes="selected camera.resolution==(2592, 1458)">2592x1458 (max 16:9)</option>
+                  <option value="2592x1944" tal:attributes="selected camera.resolution==(2592, 1944)">2592x1944 (max 4:3)</option>
+                </select>
+              </div>
+            </div>
+
             <div class="row">
               <div class="small-3 columns">
                 <label for="exposure-mode" class="right inline">Exposure Mode</label>
