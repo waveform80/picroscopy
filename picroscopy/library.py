@@ -125,7 +125,8 @@ class PicroscopyLibrary(object):
         self.camera.contrast = 0
         self.camera.brightness = 50
         self.camera.saturation = 0
-        self.camera.ISO = 400
+        # XXX Bug in the camera: ISO needs to be zero for exposure mode to work
+        self.camera.ISO = 0
         self.camera.exposure_compensation = 0
         self.camera.hflip = False
         self.camera.vflip = False

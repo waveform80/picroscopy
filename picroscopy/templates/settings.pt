@@ -129,6 +129,7 @@
               <div class="small-2 columns">+100</div>
             </div>
 
+            <!-- XXX Commented out until camera's firmware is fixed -->
             <!--div class="row advanced">
               <div class="small-3 columns">
                 <label for="ISO" class="right inline">ISO</label>
@@ -157,13 +158,14 @@
               </div>
             </div>
 
-            <div class="row">
+            <div class="row advanced">
               <div class="small-3 columns">
                 <label for="exposure-mode" class="right inline">Exposure Mode</label>
               </div>
               <div class="small-9 columns">
                 <select required name="exposure-mode" id="exposure-mode">
-                  <option tal:repeat="value camera.EXPOSURE_MODES" value="${value}" tal:attributes="selected camera.exposure_mode==value">${value}</option>
+                  <!-- XXX verylong excluded until camera firmware is fixed -->
+                  <option tal:repeat="value [m for m in camera.EXPOSURE_MODES if m != 'verylong']" value="${value}" tal:attributes="selected camera.exposure_mode==value">${value}</option>
                 </select>
               </div>
             </div>
