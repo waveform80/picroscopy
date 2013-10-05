@@ -187,13 +187,13 @@ class PicroscopyWsgiApp(object):
         except ValueError:
             self.flashes.append(
                 'Invalid resolution: %s' % req.params['resolution'])
-        if library.camera.resolution != new_resolution:
+        if self.library.camera.resolution != new_resolution:
             try:
-                library.camera.stop_preview()
+                self.library.camera.stop_preview()
                 try:
-                    library.camera.resolution = new_resolution
+                    self.library.camera.resolution = new_resolution
                 finally:
-                    library.camera.start_preview()
+                    self.library.camera.start_preview()
             except PiCameraError:
                 self.flashes.append(
                     'Unable to change camera resolution '
