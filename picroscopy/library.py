@@ -254,7 +254,7 @@ class PicroscopyLibrary(object):
         body = '\n'.join(body)
         msg.attach(MIMEText(body))
         for image in self:
-            _, f = self.open_image(image)
+            f = self.open_image(image)
             msg.attach(MIMEImage(f.read()))
         if self.smtp_server:
             s = smtplib.SMTP(*self.smtp_server)
