@@ -258,7 +258,7 @@ class PicroscopyConsoleApp(object):
             logging.info('Listening on %s:%s' % (args.listen[0], args.listen[1]))
             httpd.serve_forever()
         finally:
-            app.camera.close()
+            app.library.camera.close()
         return 0
 
 

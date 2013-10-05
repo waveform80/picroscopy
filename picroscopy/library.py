@@ -155,7 +155,7 @@ class PicroscopyLibrary(object):
         return self.camera.exif_tags.get('IFD0.Artist', '')
     def _set_artist(self, value):
         if value:
-            self.camera.exif_tags['IFD0.Artist'] = ascii_property(value, 'Photographer')
+            self.camera.exif_tags['IFD0.Artist'] = ascii_property(value, 'Name')
         else:
             self.camera.exif_tags.pop('IFD0.Artist', '')
     artist = property(_get_artist, _set_artist)

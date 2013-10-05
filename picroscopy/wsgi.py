@@ -191,17 +191,26 @@ class PicroscopyWsgiApp(object):
             try:
                 setattr(
                     self.library.camera, setting.replace('-', '_'),
-                    req.params.get(setting, '0')
+                    bool(req.params.get(setting, 0))
+                    )
+            except ValueError:
+                self.flashes.append(
+                    'Invalid %s: %s' % (setting, req.params[setting]))
+        for setting in ('meter-mode', 'awb-mode', 'exposure-mode'):
+            try:
+                setattr(
+                    self.library.camera, setting.replace('-', '_'),
+                    req.params[setting]
                     )
             except ValueError:
                 self.flashes.append(
                     'Invalid %s: %s' % (setting, req.params[setting]))
         for setting in (
-                'meter-mode', 'awb-mode', 'exposure-mode', 'artist', 'email',
-                'copyright', 'description', 'filename-template'):
+                'artist', 'email', 'copyright', 'description',
+                'filename-template'):
             try:
                 setattr(
-                    self.library.camera, setting.replace('-', '_'),
+                    self.library, setting.replace('-', '_'),
                     req.params[setting]
                     )
             except ValueError:
