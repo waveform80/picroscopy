@@ -129,7 +129,7 @@
               <div class="small-2 columns">+100</div>
             </div>
 
-            <div class="row advanced">
+            <!--div class="row advanced">
               <div class="small-3 columns">
                 <label for="ISO" class="right inline">ISO</label>
               </div>
@@ -141,7 +141,7 @@
                   <option value="800" tal:attributes="selected camera.ISO==800">800</option>
                 </select>
               </div>
-            </div>
+            </div-->
 
             <div class="row advanced">
               <div class="small-3 columns">

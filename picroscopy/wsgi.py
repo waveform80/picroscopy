@@ -200,7 +200,7 @@ class PicroscopyWsgiApp(object):
                     'to %s' % req.params['resolution'])
         # Everything else is handled generically...
         for setting in (
-                'sharpness', 'contrast', 'brightness', 'saturation', 'ISO',
+                'sharpness', 'contrast', 'brightness', 'saturation', #'ISO',
                 'exposure-compensation'):
             try:
                 setattr(
