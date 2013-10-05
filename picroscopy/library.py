@@ -37,8 +37,6 @@ import os
 import io
 import errno
 import logging
-import threading
-import subprocess
 import datetime
 import tempfile
 import zipfile
@@ -48,123 +46,13 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 
 from PIL import Image
+from picamera import PiCamera
 
 from picroscopy import __version__
 from picroscopy.exif import format_exif
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-
-CAMERA_LOCK = threading.RLock()
-PREVIEW_PROCESS = None
-USE_GSTREAMER = False
-RASPIVID = '/usr/bin/raspivid'
-RASPISTILL = '/usr/bin/raspistill'
-
-
-def raspi_settings(settings, exif=False):
-    result = [
-        '--sharpness',  str(settings.sharpness),
-        '--contrast',   str(settings.contrast),
-        '--brightness', str(settings.brightness),
-        '--saturation', str(settings.saturation),
-        '--ISO',        str(settings.ISO),
-        '--ev',         str(settings.evcomp),
-        '--exposure',   settings.exposure,
-        '--metering',   settings.metering,
-        '--awb',        settings.white_balance,
-        ]
-    if settings.vstab:
-        result.append('--vstab')
-    if settings.hflip:
-        result.append('--hflip')
-    if settings.vflip:
-        result.append('--vflip')
-    if exif:
-        if settings.artist and settings.email:
-            artist = '%s <%s>' % settings.artist
-        else:
-            artist = settings.artist
-        if settings.software:
-            result.extend(['-x', 'IFD0.Software=%s' % settings.software])
-        if artist:
-            result.extend(['-x', 'IFD0.Artist=Photographer, %s' % artist])
-        if settings.copyright:
-            result.extend(['-x', 'IFD0.Copyright=%s' % settings.copyright])
-        elif settings.artist:
-            result.extend(['-x', 'IFD0.Copyright=Copyright, %s, %d' % (
-                artist, datetime.date.today().year)])
-        if settings.description:
-            result.extend(['-x', 'IFD0.ImageDescription=%s' % settings.description])
-    return result
-
-def start_preview(settings):
-    global PREVIEW_PROCESS
-    with CAMERA_LOCK:
-        if not PREVIEW_PROCESS:
-            if USE_GSTREAMER:
-                cmdline = [
-                    'gst-launch-0.10',
-                    'v4l2src',                              '!',
-                    'video/x-raw-yuv,width=640,height=360', '!',
-                    'ffmpegcolorspace',                     '!',
-                    'xvimagesink',
-                    ]
-            else:
-                cmdline = [RASPIVID, '-t', '0'] + raspi_settings(settings)
-            logging.debug('Executing %s', cmdline)
-            PREVIEW_PROCESS = subprocess.Popen(cmdline)
-
-def stop_preview():
-    global PREVIEW_PROCESS
-    with CAMERA_LOCK:
-        if PREVIEW_PROCESS:
-            logging.debug('Terminating preview process')
-            PREVIEW_PROCESS.terminate()
-            PREVIEW_PROCESS.wait()
-            PREVIEW_PROCESS = None
-
-def capture_image(dest, settings):
-    with CAMERA_LOCK:
-        stop_preview()
-        try:
-            if USE_GSTREAMER:
-                cmdline = [
-                    'gst-launch-0.10',
-                    'v4l2src', 'num-buffers=1',             '!',
-                    'video/x-raw-yuv,width=640,height=360', '!',
-                    'ffmpegcolorspace',                     '!',
-                    'jpegenc',                              '!',
-                    'filesink', 'location=%s' % dest,
-                    ]
-            else:
-                cmdline = [
-                    RASPISTILL,
-                    '-t', '2000', # Allow 2 seconds for calibration
-                    '-o', dest,
-                    ] + raspi_settings(settings, exif=True)
-            logging.debug('Executing %s', cmdline)
-            p = subprocess.Popen(cmdline)
-            p.communicate()
-        finally:
-            start_preview(settings)
-
-
-def int_property(value, min_value, max_value, name):
-    value = int(value)
-    if not (min_value <= value <= max_value):
-        raise ValueError('Invalid %s: %d not between %d and %d' % (
-            name, value, min_value, max_value))
-    return value
-
-def bool_property(value, name):
-    value = bool(int(value))
-    return bool(value)
-
-def str_property(value, valid, name):
-    if not value in valid:
-        raise ValueError('Invalid %s: %s' % (name, value))
-    return value
 
 def ascii_property(value, name):
     try:
@@ -174,10 +62,10 @@ def ascii_property(value, name):
     return value
 
 
-class PicroscopyCamera(object):
+class PicroscopyLibrary(object):
     def __init__(self, **kwargs):
         super().__init__()
-        global USE_GSTREAMER, RASPIVID, RASPISTILL
+        self.camera = PiCamera()
         self.images_tmp = tempfile.mkdtemp(dir=os.environ.get('TEMP', '/tmp'))
         self.thumbs_tmp = tempfile.mkdtemp(dir=os.environ.get('TEMP', '/tmp'))
         self.images_dir = os.path.abspath(os.path.normpath(kwargs.get(
@@ -206,23 +94,17 @@ class PicroscopyCamera(object):
             logging.info('Sending mail via SMTP server: %s', self.smtp_server)
         else:
             logging.info('Sending mail via sendmail binary: %s', self.sendmail)
-        USE_GSTREAMER = kwargs.get('gstreamer', False)
-        RASPIVID = kwargs.get('raspivid', '/usr/bin/raspivid')
-        RASPISTILL = kwargs.get('raspistill', '/usr/bin/raspistill')
         self.camera_reset()
         self.user_reset()
-        start_preview(self)
+        self.camera.start_preview()
 
     def close(self):
-        stop_preview()
+        self.camera.stop_preview()
+        self.camera.close()
         if self.images_dir == self.images_tmp:
             self.clear()
         os.rmdir(self.images_tmp)
         os.rmdir(self.thumbs_tmp)
-
-    def restart(self):
-        stop_preview()
-        start_preview(self)
 
     def __len__(self):
         return sum(1 for f in os.listdir(self.images_dir) if f.endswith('.jpg'))
@@ -239,140 +121,43 @@ class PicroscopyCamera(object):
             )
 
     def camera_reset(self):
-        self._sharpness = 0
-        self._contrast = 0
-        self._brightness = 50
-        self._saturation = 0
-        self._ISO = 400
-        self._evcomp = 0
-        self._vstab = False
-        self._hflip = False
-        self._vflip = False
-        self._exposure = 'auto'
-        self._white_balance = 'auto'
-        self._metering = 'average'
-        self._software = 'Picroscopy %s' % __version__
+        self.camera.sharpness = 0
+        self.camera.contrast = 0
+        self.camera.brightness = 50
+        self.camera.saturation = 0
+        self.camera.ISO = 400
+        self.camera.exposure_compensation = 0
+        self.camera.hflip = False
+        self.camera.vflip = False
+        self.camera.exposure_mode = 'auto'
+        self.camera.awb_mode = 'auto'
+        self.camera.meter_mode = 'average'
+        self.software = 'Picroscopy %s' % __version__
 
     def user_reset(self):
-        self._description = ''
-        self._artist = ''
-        self._email = ''
-        self._copyright = ''
-        self._filename_template = 'pic-{date:%Y%m%d}-{counter:05d}.jpg'
+        self.description = ''
+        self.artist = ''
+        self.copyright = ''
+        self.email = ''
+        self.filename_template = 'pic-{date:%Y%m%d}-{counter:05d}.jpg'
         self.counter = 1
 
-    def _get_sharpness(self):
-        return self._sharpness
-    def _set_sharpness(self, value):
-        self._sharpness = int_property(value, -100, 100, 'Sharpness')
-    sharpness = property(_get_sharpness, _set_sharpness)
-
-    def _get_contrast(self):
-        return self._contrast
-    def _set_contrast(self, value):
-        self._contrast = int_property(value, -100, 100, 'Contrast')
-    contrast = property(_get_contrast, _set_contrast)
-
-    def _get_brightness(self):
-        return self._brightness
-    def _set_brightness(self, value):
-        self._brightness = int_property(value, 0, 100, 'Brightness')
-    brightness = property(_get_brightness, _set_brightness)
-
-    def _get_saturation(self):
-        return self._saturation
-    def _set_saturation(self, value):
-        self._saturation = int_property(value, -100, 100, 'Saturation')
-    saturation = property(_get_saturation, _set_saturation)
-
-    def _get_ISO(self):
-        return self._ISO
-    def _set_ISO(self, value):
-        self._ISO = int_property(value, 100, 800, 'ISO')
-    ISO = property(_get_ISO, _set_ISO)
-
-    def _get_evcomp(self):
-        return self._evcomp
-    def _set_evcomp(self, value):
-        self._evcomp = int_property(value, -10, 10, 'EV compensation')
-    evcomp = property(_get_evcomp, _set_evcomp)
-
-    def _get_exposure(self):
-        return self._exposure
-    def _set_exposure(self, value):
-        self._exposure = str_property(value, (
-            #'off',
-            'auto',
-            'night',
-            'nightpreview',
-            'backlight',
-            'spotlight',
-            'sports',
-            'snow',
-            'beach',
-            #'verylong',
-            'fixedfps',
-            'antishake',
-            'fireworks',
-            ), 'Exposure')
-    exposure = property(_get_exposure, _set_exposure)
-
-    def _get_white_balance(self):
-        return self._white_balance
-    def _set_white_balance(self, value):
-        self._white_balance = str_property(value, (
-            'off',
-            'auto',
-            'sun',
-            'cloud',
-            'shade',
-            'tungsten',
-            'fluorescent',
-            'incandescent',
-            'flash',
-            'horizon',
-            ), 'White balance')
-    white_balance = property(_get_white_balance, _set_white_balance)
-
-    def _get_metering(self):
-        return self._metering
-    def _set_metering(self, value):
-        self._metering = str_property(value, (
-            'average',
-            'spot',
-            'backlit',
-            'matrix',
-            ), 'Metering')
-    metering = property(_get_metering, _set_metering)
-
-    def _get_vstab(self):
-        return self._vstab
-    def _set_vstab(self, value):
-        self._vstab = bool_property(value, 'Video stabilization')
-    vstab = property(_get_vstab, _set_vstab)
-
-    def _get_hflip(self):
-        return self._hflip
-    def _set_hflip(self, value):
-        self._hflip = bool_property(value, 'Horizontal flip')
-    hflip = property(_get_hflip, _set_hflip)
-
-    def _get_vflip(self):
-        return self._vflip
-    def _set_vflip(self, value):
-        self._vflip = bool_property(value, 'Vertical flip')
-    vflip = property(_get_vflip, _set_vflip)
-
     def _get_description(self):
-        return self._description
+        return self.camera.exif_tags.get('IFD0.ImageDescription', '')
     def _set_description(self, value):
-        self._description = ascii_property(value, 'Description')
+        if value:
+            self.camera.exif_tags['IFD0.ImageDescription'] = ascii_property(value, 'Description')
+        else:
+            self.camera.exif_tags.pop('IFD0.ImageDescription', '')
     description = property(_get_description, _set_description)
 
     def _get_artist(self):
-        return self._artist
+        return self.camera.exif_tags.get('IFD0.Artist', '')
     def _set_artist(self, value):
-        self._artist = ascii_property(value, 'Photographer')
+        if value:
+            self.camera.exif_tags['IFD0.Artist'] = ascii_property(value, 'Photographer')
+        else:
+            self.camera.exif_tags.pop('IFD0.Artist', '')
     artist = property(_get_artist, _set_artist)
 
     def _get_email(self):
@@ -382,15 +167,21 @@ class PicroscopyCamera(object):
     email = property(_get_email, _set_email)
 
     def _get_copyright(self):
-        return self._copyright
+        return self.camera.exif_tags.get('IFD0.Copyright', '')
     def _set_copyright(self, value):
-        self._copyright = ascii_property(value, 'Copyright')
+        if value:
+            self.camera.exif_tags['IFD0.Copyright'] = ascii_property(value, 'Copyright')
+        else:
+            self.camera.exif_tags.pop('IFD0.Copyright', '')
     copyright = property(_get_copyright, _set_copyright)
 
     def _get_software(self):
-        return self._software
+        return self.camera.exif_tags.get('IFD0.Software', '')
     def _set_software(self, value):
-        self._software = ascii_property(value, 'Software')
+        if value:
+            self.camera.exif_tags['IFD0.Software'] = ascii_property(value, 'Software')
+        else:
+            self.camera.exif_tags.pop('IFD0.Software', '')
     software = property(_get_software, _set_software)
 
     def _get_filename_template(self):
@@ -419,7 +210,7 @@ class PicroscopyCamera(object):
             else:
                 os.close(fd)
                 break
-        capture_image(filename, self)
+        self.camera.capture(filename)
 
     def remove(self, image):
         try:

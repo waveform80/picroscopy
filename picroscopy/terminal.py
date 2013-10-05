@@ -134,11 +134,6 @@ class PicroscopyConsoleApp(object):
             '-P', '--pdb', dest='debug', action='store_true', default=False,
             help='run under PuDB/PDB (debug mode)')
         self.parser.add_argument(
-            '-G', '--gstreamer', dest='gstreamer', action='store_true',
-            default=False,
-            help='use GStreamer instead of raspivid/still - this is intended '
-            'for debugging on a non-RPi platform')
-        self.parser.add_argument(
             '-L', '--listen', dest='listen', action='store',
             default='0.0.0.0:%d' % (8000 if os.geteuid() else 80),
             metavar='HOST[:PORT]', type=interface,
@@ -178,14 +173,6 @@ class PicroscopyConsoleApp(object):
             metavar='HOST[:PORT]', type=interface,
             help='send email directly using the specified SMTP smarthost '
             '(mutually exclusive with --sendmail)')
-        self.parser.add_argument(
-            '--raspivid', dest='raspivid', action='store',
-            default='/usr/bin/raspivid', metavar='EXEC',
-            help='the path to the raspivid binary. Default: %(default)s')
-        self.parser.add_argument(
-            '--raspistill', dest='raspistill', action='store',
-            default='/usr/bin/raspistill', metavar='EXEC',
-            help='the path to the raspistill binary. Default: %(default)s')
 
     def __call__(self, args=None):
         if args is None:
@@ -236,7 +223,6 @@ class PicroscopyConsoleApp(object):
                 config.get(section, key)
                 for key in (
                     'pdb',
-                    'gstreamer',
                     'log_file',
                     'listen',
                     'clients',
@@ -245,8 +231,6 @@ class PicroscopyConsoleApp(object):
                     'email_from',
                     'sendmail',
                     'smtp_server',
-                    'raspivid',
-                    'raspistill',
                     )
                 if key in config[section]
                 })

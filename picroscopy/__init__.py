@@ -45,6 +45,7 @@ __keywords__ = [
     ]
 
 __requires__ = [
+    'picamera<2.0dev',
     'webob<2.0dev',
     'chameleon<3.0dev',
     'wheezy.routing<2.0dev',

@@ -16,7 +16,7 @@
               <div class="small-9 columns">
                 <input required type="text" id="artist" name="artist"
                   data-generates="copyright"
-                  placeholder="Your full name" value="${camera.artist}" />
+                  placeholder="Your full name" value="${library.artist}" />
               </div>
             </div>
 
@@ -27,7 +27,7 @@
               <div class="small-9 columns">
                 <input type="email" id="email" name="email"
                   data-generates="copyright"
-                  placeholder="Your e-mail address" value="${camera.email}" />
+                  placeholder="Your e-mail address" value="${library.email}" />
               </div>
             </div>
 
@@ -38,7 +38,7 @@
               <div class="small-9 columns">
                 <input type="text" id="copyright" name="copyright"
                   placeholder="Copyright statement"
-                  value="${camera.copyright}" />
+                  value="${library.copyright}" />
               </div>
             </div>
 
@@ -49,7 +49,7 @@
               <div class="small-9 columns">
                 <input type="text" id="description" name="description"
                   placeholder="Subject matter description"
-                  value="${camera.description}" />
+                  value="${library.description}" />
               </div>
             </div>
 
@@ -60,7 +60,7 @@
               <div class="small-9 columns">
                 <input type="text" id="filename-template" name="filename-template"
                   required placeholder="pic-{counter}.jpg"
-                  value="${camera.filename_template}" />
+                  value="${library.filename_template}" />
               </div>
             </div>
 
@@ -68,18 +68,6 @@
 
           <fieldset>
             <legend>Camera Settings</legend>
-
-            <div class="row">
-              <div class="small-3 columns">
-                <label for="sharpness" class="right inline">Sharpness</label>
-              </div>
-              <div class="small-1 columns">-100</div>
-              <div class="small-6 columns">
-                <input name="sharpness" id="sharpness" type="range"
-                min="-100" max="100" value="${camera.sharpness}" />
-              </div>
-              <div class="small-2 columns">+100</div>
-            </div>
 
             <div class="row">
               <div class="small-3 columns">
@@ -107,6 +95,18 @@
 
             <div class="row">
               <div class="small-3 columns">
+                <label for="exposure-compensation" class="right inline">Exposure</label>
+              </div>
+              <div class="small-1 columns">-25</div>
+              <div class="small-6 columns">
+                <input required name="exposure-compensation" id="exposure-compensation" type="range"
+                  min="-25" max="25" value="${camera.exposure_compensation}" />
+              </div>
+              <div class="small-2 columns">+25</div>
+            </div>
+
+            <div class="row advanced">
+              <div class="small-3 columns">
                 <label for="saturation" class="right inline">Saturation</label>
               </div>
               <div class="small-1 columns">-100</div>
@@ -119,17 +119,17 @@
 
             <div class="row advanced">
               <div class="small-3 columns">
-                <label for="evcomp" class="right inline">EV Compensation</label>
+                <label for="sharpness" class="right inline">Sharpness</label>
               </div>
-              <div class="small-1 columns">-10</div>
+              <div class="small-1 columns">-100</div>
               <div class="small-6 columns">
-                <input required name="evcomp" id="evcomp" type="range"
-                  min="-10" max="10" value="${camera.evcomp}" />
+                <input name="sharpness" id="sharpness" type="range"
+                min="-100" max="100" value="${camera.sharpness}" />
               </div>
-              <div class="small-2 columns">+10</div>
+              <div class="small-2 columns">+100</div>
             </div>
 
-            <div class="row">
+            <div class="row advanced">
               <div class="small-3 columns">
                 <label for="ISO" class="right inline">ISO</label>
               </div>
@@ -145,70 +145,34 @@
 
             <div class="row">
               <div class="small-3 columns">
-                <label for="exposure" class="right inline">Exposure</label>
+                <label for="exposure-mode" class="right inline">Exposure Mode</label>
               </div>
               <div class="small-9 columns">
-                <select required name="exposure" id="exposure">
-                  <!--option value="off"          tal:attributes="selected camera.exposure=='off'         ">off         </option-->
-                  <option value="auto"         tal:attributes="selected camera.exposure=='auto'        ">auto        </option>
-                  <option value="night"        tal:attributes="selected camera.exposure=='night'       ">night       </option>
-                  <option value="nightpreview" tal:attributes="selected camera.exposure=='nightpreview'">nightpreview</option>
-                  <option value="backlight"    tal:attributes="selected camera.exposure=='backlight'   ">backlight   </option>
-                  <option value="spotlight"    tal:attributes="selected camera.exposure=='spotlight'   ">spotlight   </option>
-                  <option value="sports"       tal:attributes="selected camera.exposure=='sports'      ">sports      </option>
-                  <option value="snow"         tal:attributes="selected camera.exposure=='snow'        ">snow        </option>
-                  <option value="beach"        tal:attributes="selected camera.exposure=='beach'       ">beach       </option>
-                  <!--option value="verylong"     tal:attributes="selected camera.exposure=='verylong'    ">verylong    </option-->
-                  <option value="fixedfps"     tal:attributes="selected camera.exposure=='fixedfps'    ">fixedfps    </option>
-                  <option value="antishake"    tal:attributes="selected camera.exposure=='antishake'   ">antishake   </option>
-                  <option value="fireworks"    tal:attributes="selected camera.exposure=='fireworks'   ">fireworks   </option>
+                <select required name="exposure-mode" id="exposure-mode">
+                  <option tal:repeat="value camera.EXPOSURE_MODES" value="${value}" tal:attributes="selected camera.exposure_mode==value">${value}</option>
                 </select>
               </div>
             </div>
 
             <div class="row">
               <div class="small-3 columns">
-                <label for="white-balance" class="right inline">White Balance</label>
+                <label for="awb-mode" class="right inline">White Balance</label>
               </div>
               <div class="small-9 columns">
-                <select required name="white-balance" id="white-balance">
-                  <option value="off"          tal:attributes="selected camera.white_balance=='off'         ">off         </option>
-                  <option value="auto"         tal:attributes="selected camera.white_balance=='auto'        ">auto        </option>
-                  <option value="sun"          tal:attributes="selected camera.white_balance=='sun'         ">sun         </option>
-                  <option value="cloud"        tal:attributes="selected camera.white_balance=='cloud'       ">cloud       </option>
-                  <option value="shade"        tal:attributes="selected camera.white_balance=='shade'       ">shade       </option>
-                  <option value="tungsten"     tal:attributes="selected camera.white_balance=='tungsten'    ">tungsten    </option>
-                  <option value="fluorescent"  tal:attributes="selected camera.white_balance=='fluorescent' ">fluorescent </option>
-                  <option value="incandescent" tal:attributes="selected camera.white_balance=='incandescent'">incandescent</option>
-                  <option value="flash"        tal:attributes="selected camera.white_balance=='flash'       ">flash       </option>
-                  <option value="horizon"      tal:attributes="selected camera.white_balance=='horizon'     ">horizon     </option>
+                <select required name="awb-mode" id="awb-mode">
+                  <option tal:repeat="value camera.AWB_MODES" value="${value}" tal:attributes="selected camera.awb_mode==value">${value}</option>
                 </select>
               </div>
             </div>
 
             <div class="row advanced">
               <div class="small-3 columns">
-                <label for="metering" class="right inline">Metering</label>
+                <label for="meter-mode" class="right inline">Metering</label>
               </div>
               <div class="small-9 columns">
-                <select required name="metering" id="metering">
-                  <option value="average" tal:attributes="selected camera.metering=='average'">average</option>
-                  <option value="spot"    tal:attributes="selected camera.metering=='spot'   ">spot   </option>
-                  <option value="backlit" tal:attributes="selected camera.metering=='backlit'">backlit</option>
-                  <option value="matrix"  tal:attributes="selected camera.metering=='matrix' ">matrix </option>
+                <select required name="meter-mode" id="meter-mode">
+                  <option tal:repeat="value camera.METER_MODES" value="${value}" tal:attributes="selected camera.meter_mode==value">${value}</option>
                 </select>
-              </div>
-            </div>
-
-            <div class="row advanced">
-              <div class="small-3 columns">
-                &nbsp;
-              </div>
-              <div class="small-9 columns">
-                <label>
-                  <input name="vstab" id="vstab" type="checkbox"
-                    value="1" tal:attributes="checked camera.vstab" /> Video stabilization
-                </label>
               </div>
             </div>
 

@@ -34,8 +34,8 @@ If you wish to install the documentation building dependencies also::
     nearly an hour to build; this seems to have something to do with their use
     of ``2to3`` to attain Python 3 compatibility.
 
-You should now be able to run picroscopy with one of the included configuration
-files like so::
+You should now be able to run picroscopy with the included configuration file
+like so::
 
     $ picroscopy -c picroscopy.ini
 
@@ -65,19 +65,10 @@ without any of the extra development stuff like tags)::
     $ cd picroscopy
     $ make develop
 
-You should now be able to run picroscopy with one of the included configuration
-files like so::
+You should now be able to run picroscopy with the included configuration file
+like so::
 
-    $ picroscopy -c development.ini
-
-.. note::
-    The ``development.ini`` configuration defaults to using GStreamer and a
-    webcam instead of the Raspberry Pi camera. This is to enable development on
-    slightly more swift platforms than the Pi itself. Set ``gstreamer`` to
-    ``false`` in the configuration if you wish to run the development
-    configuration on the Pi itself (although if you do you will almost
-    certainly wish to change the ``listen`` directive too to enable a system
-    with a web browser to access the Pi).
+    $ picroscopy -c picroscopy.ini
 
 If you wish to develop the documentation, please be aware of the warning above
 about long installation times. You can use the following make target to build

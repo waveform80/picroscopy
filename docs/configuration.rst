@@ -87,17 +87,6 @@ If ``true``, run under `PuDB`_ (if available) or PDB. This launches Picroscopy
 within a Python debugger for development purposes.
 
 
-.. _gstreamer:
-
-gstreamer
----------
-
-If ``true``, use a GStreamer pipeline instead of the ``raspivid`` or
-``raspistill`` binaries to display the preview and capture images. This option
-is intended to aid development on non-RPi platforms by permitting testing with
-a webcam.
-
-
 .. _listen:
 
 listen
@@ -179,22 +168,6 @@ smtp_server
 Use the specified SMTP smarthost to send e-mail. This should only be used if
 you do not wish to configure a local sendmail binary. If this option is
 specified, it will always override any ``sendmail`` specification.
-
-
-.. _raspivid:
-
-raspivid
---------
-
-The path to the raspivid binary to use. Defaults to ``/usr/bin/raspivid``.
-
-
-.. _raspistill:
-
-raspistill
-----------
-
-The path to the raspbistill binary to use. Defaults to ``/usr/bin/raspistill``.
 
 
 .. _INI-file: http://en.wikipedia.org/wiki/INI_file

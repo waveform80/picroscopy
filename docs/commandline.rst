@@ -15,12 +15,11 @@ Synopsis
 
 ::
 
-    picroscopy [-h] [--version] [-c CONFIG] [-q] [-v] [-l FILE] [-P] [-G]
-               [-d] [-L HOST[:PORT]] [-C NETWORK[/LEN]] [--images-dir DIR]
+    picroscopy [-h] [--version] [-c CONFIG] [-q] [-v] [-l FILE] [-P] [-d]
+               [-L HOST[:PORT]] [-C NETWORK[/LEN]] [--images-dir DIR]
                [--thumbs-dir DIR] [--thumbs-size WIDTHxHEIGHT]
                [--email-from USER[@HOST]]
                [--sendmail EXEC | --smtp-server HOST[:PORT]]
-               [--raspivid EXEC] [--raspistill EXEC]
 
 Description
 ===========
@@ -64,11 +63,6 @@ Description
 
     Run under `PuDB`_ (if available) or PDB. This launches Picroscopy within a
     Python debugger for development purposes.
-
-.. option:: -G, --gstreamer
-
-    Use GStreamer instead of the raspivid/raspistill binaries. This option is
-    intended to aid development on non-RPi platforms.
 
 .. option:: -L HOST[:PORT], --listen HOST[:PORT]
 
@@ -120,15 +114,6 @@ Description
     if you do not wish to configure a local sendmail binary. If this option
     is specified, it will always override any ``--sendmail`` specification.
 
-.. option:: --raspivid EXEC
-
-    The path to the raspivid binary to use. Defaults to ``/usr/bin/raspivid``.
-
-.. option:: --raspistill EXEC
-
-    The path to the raspbistill binary to use. Defaults to
-    ``/usr/bin/raspistill``.
-
 
 Examples
 ========
@@ -152,10 +137,6 @@ Run Picroscopy, ensuring that e-mail is sent via the SMTP server running on
 ``localhost``, and that e-mail appears to come from ``noreply@example.com``::
 
     $ picroscopy --smtp-server localhost --email-from noreply@example.com
-
-Run Picroscopy, using custom builds of raspivid and raspistill::
-
-    $ picroscopy --raspivid /home/pi/build/raspivid --raspistill /home/pi/build/raspistill
 
 Run Picroscopy, explicitly specifying the images directory and the thumbnails
 directory (which ensures both persist across runs; the default is to use

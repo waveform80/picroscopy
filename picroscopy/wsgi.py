@@ -55,25 +55,25 @@ from webob import Request, Response, exc
 from chameleon import PageTemplateLoader
 from wheezy.routing import PathRouter, url
 
-from picroscopy.camera import PicroscopyCamera
+from picroscopy.library import PicroscopyLibrary
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class WebHelpers(object):
-    def __init__(self, camera):
-        self.camera = camera
+    def __init__(self, library):
+        self.library = library
 
     def image_size(self, image):
         return self.format_size(
-            self.camera.stat_image(image).st_size, 'B', binary=True)
+            self.library.stat_image(image).st_size, 'B', binary=True)
 
     def image_created(self, image):
         return datetime.datetime.fromtimestamp(
-            self.camera.stat_image(image).st_mtime).strftime('%H:%M:%S on %a, %d %b %Y')
+            self.library.stat_image(image).st_mtime).strftime('%H:%M:%S on %a, %d %b %Y')
 
     def image_exif(self, image):
-        exif_data = self.camera.open_image_exif(image)
+        exif_data = self.library.open_image_exif(image)
         return sorted(
             ((title, value) for (title, value) in exif_data.items()),
             key=itemgetter(0)
@@ -102,8 +102,8 @@ class WebHelpers(object):
 class PicroscopyWsgiApp(object):
     def __init__(self, **kwargs):
         super().__init__()
-        self.camera = PicroscopyCamera(**kwargs)
-        self.helpers = WebHelpers(self.camera)
+        self.library = PicroscopyLibrary(**kwargs)
+        self.helpers = WebHelpers(self.library)
         self.clients = kwargs.get('clients', IPv4Network('0.0.0.0/0'))
         logging.info('Clients must be on network %s', self.clients)
         self.static_dir = os.path.abspath(os.path.normpath(kwargs.get(
@@ -165,55 +165,51 @@ class PicroscopyWsgiApp(object):
 
     def do_reset(self, req):
         """
-        Reset the camera settings to their defaults
+        Reset all settings to their defaults
         """
-        self.camera.camera_reset()
-        self.camera.restart()
+        self.library.camera_reset()
         self.flashes.append('Camera settings reset to defaults')
         raise exc.HTTPFound(
             location=self.router.path_for('template', page='library'))
 
     def do_config(self, req):
         """
-        Configure the camera settings
+        Configure the library and camera settings
         """
         for setting in (
                 'sharpness', 'contrast', 'brightness', 'saturation', 'ISO',
-                'evcomp'):
+                'exposure-compensation'):
             try:
                 setattr(
-                    self.camera, setting.replace('-', '_'),
+                    self.library.camera, setting.replace('-', '_'),
                     int(req.params[setting])
                     )
             except ValueError:
                 self.flashes.append(
                     'Invalid %s: %s' % (setting, req.params[setting]))
-        for setting in ('vstab', 'hflip', 'vflip'):
+        for setting in ('hflip', 'vflip'):
             try:
                 setattr(
-                    self.camera, setting.replace('-', '_'),
+                    self.library.camera, setting.replace('-', '_'),
                     req.params.get(setting, '0')
                     )
             except ValueError:
                 self.flashes.append(
                     'Invalid %s: %s' % (setting, req.params[setting]))
         for setting in (
-                'metering', 'white-balance', 'exposure', 'artist', 'email',
+                'meter-mode', 'awb-mode', 'exposure-mode', 'artist', 'email',
                 'copyright', 'description', 'filename-template'):
             try:
                 setattr(
-                    self.camera, setting.replace('-', '_'),
+                    self.library.camera, setting.replace('-', '_'),
                     req.params[setting]
                     )
             except ValueError:
                 self.flashes.append(
                     'Invalid %s: %s' % (setting, req.params[setting]))
-        # XXX Add handler for system settings
         # If any settings failed, re-render the settings form
         if self.flashes:
             return self.do_template(req, 'settings')
-        self.camera.restart()
-        self.flashes.append('Camera settings updated')
         raise exc.HTTPFound(
             location=self.router.path_for('template', page='library'))
 
@@ -221,15 +217,15 @@ class PicroscopyWsgiApp(object):
         """
         Take a new image with the camera and add it to the library
         """
-        self.camera.capture()
+        self.library.capture()
         raise exc.HTTPFound(
             location=self.router.path_for('template', page='library'))
 
     def do_download(self, req):
         """
-        Send the camera library as a .zip archive
+        Send the library as a .zip archive
         """
-        archive = self.camera.archive()
+        archive = self.library.archive()
         size = archive.seek(0, io.SEEK_END)
         archive.seek(0)
         resp = Response()
@@ -241,54 +237,53 @@ class PicroscopyWsgiApp(object):
 
     def do_send(self, req):
         """
-        Send the camera library as a set of attachments to an email
+        Send the library as a set of attachments to an email
         """
-        self.camera.send()
-        self.flashes.append('Email sent to %s' % camera.email)
+        self.library.send()
+        self.flashes.append('Email sent to %s' % library.email)
         raise exc.HTTPFound(
             location=self.router.path_for('template', page='library'))
 
     def do_delete(self, req, image):
         """
-        Delete the selected images from camera library
+        Delete the selected images from library
         """
-        self.camera.remove(image)
+        self.library.remove(image)
         raise exc.HTTPFound(
             location=self.router.path_for('template', page='library'))
 
     def do_logout(self, req):
         """
-        Clear the camera library of all images, reset all settings
+        Clear the library of all images, reset all settings
         """
-        self.camera.clear()
-        self.camera.user_reset()
-        self.camera.camera_reset()
-        self.camera.restart()
+        self.library.clear()
+        self.library.user_reset()
+        self.library.camera_reset()
         raise exc.HTTPFound(
             location=self.router.path_for('template', page='settings'))
 
     def do_image(self, req, image):
         """
-        Serve an image from the camera library
+        Serve an image from the library
         """
-        if not image in self.camera:
+        if not image in self.library:
             self.not_found(req)
         resp = Response()
         resp.content_type = 'image/jpeg'
-        resp.content_length = self.camera.stat_image(image).st_size
-        resp.app_iter = FileWrapper(self.camera.open_image(image))
+        resp.content_length = self.library.stat_image(image).st_size
+        resp.app_iter = FileWrapper(self.library.open_image(image))
         return resp
 
     def do_thumb(self, req, image):
         """
-        Serve a thumbnail of an image from the camera library
+        Serve a thumbnail of an image from the library
         """
-        if not image in self.camera:
+        if not image in self.library:
             self.not_found(req)
         resp = Response()
         resp.content_type = 'image/jpeg'
-        resp.content_length = self.camera.stat_thumbnail(image).st_size
-        resp.app_iter = FileWrapper(self.camera.open_thumbnail(image))
+        resp.content_length = self.library.stat_thumbnail(image).st_size
+        resp.app_iter = FileWrapper(self.library.open_thumbnail(image))
         return resp
 
     def do_static(self, req, path):
@@ -325,7 +320,8 @@ class PicroscopyWsgiApp(object):
             helpers=self.helpers,
             layout=self.layout,
             flashes=self.flashes,
-            camera=self.camera,
+            library=self.library,
+            camera=self.library.camera,
             router=self.router)
         del self.flashes[:]
         return resp
