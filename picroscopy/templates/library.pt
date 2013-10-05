@@ -14,13 +14,13 @@
         </dl>
       </div>
       <div class="small-6 columns">
-        <p class="right">${'No' if not camera else len(camera)} image${'s' if len(camera) != 1 else ''} stored.</p>
+        <p class="right">${'No' if not library else len(library)} image${'s' if len(library) != 1 else ''} stored.</p>
       </div>
     </div>
 
     <div class="row">
       <div class="small-12 columns">
-        <table tal:condition="camera and (req.params.get('show', 'grid') == 'table')">
+        <table tal:condition="library and (req.params.get('show', 'grid') == 'table')">
           <thead>
             <tr>
               <th>Thumbnail</th>
@@ -30,7 +30,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr tal:repeat="image camera">
+            <tr tal:repeat="image library">
               <td>
                 <a href="${router.path_for('view', image=image)}">
                   <img class="th" width="200" src="${router.path_for('thumb', image=image)}" />
@@ -43,8 +43,8 @@
           </tbody>
         </table>
         <ul class="gallery small-block-grid-2 large-block-grid-4"
-            tal:condition="camera and (req.params.get('show', 'grid') == 'grid')">
-          <li tal:repeat="image camera">
+            tal:condition="library and (req.params.get('show', 'grid') == 'grid')">
+          <li tal:repeat="image library">
           <a href="${router.path_for('view', image=image)}">
             <img class="th" src="${router.path_for('thumb', image=image)}" />
             <br />
@@ -59,7 +59,7 @@
       <div class="small-12 columns">
         <hr />
         <span>
-          <a class="small button radius ${'disabled' if not camera.artist else ''}" href="${router.path_for('capture')}">
+          <a class="small button radius ${'disabled' if not library.artist else ''}" href="${router.path_for('capture')}">
             <span class="glyphicon glyphicon-camera"></span><br />
             Capture <span class="hide-for-small">Image</span>
           </a>
@@ -69,18 +69,18 @@
           </a>
         </span>
         <span class="right">
-          <a class="small button radius ${'disabled' if not camera else ''}"
+          <a class="small button radius ${'disabled' if not library else ''}"
             href="${router.path_for('download')}">
             <span class="glyphicon glyphicon-download"></span><br />
             Download <span class="hide-for-small">Library</span>
           </a>
-          <a class="small button radius ${'disabled' if not (camera and camera.email) else ''} confirmation"
-            data-confirm="Are you sure you wish to send the entire library to ${camera.email}?"
+          <a class="small button radius ${'disabled' if not (library and library.email) else ''} confirmation"
+            data-confirm="Are you sure you wish to send the entire library to ${library.email}?"
             href="${router.path_for('send')}">
             <span class="glyphicon glyphicon-send"></span><br />
             Send <span class="hide-for-small">Library</span>
           </a>
-          <a class="small button radius ${'disabled' if not camera else ''} confirmation"
+          <a class="small button radius ${'disabled' if not library else ''} confirmation"
             data-confirm="This will wipe the library and reset all settings. Are you sure?"
             href="${router.path_for('logout')}">
             <span class="glyphicon glyphicon-remove-circle"></span><br />
@@ -90,7 +90,7 @@
       </div>
     </div>
 
-    <div class="row" tal:condition="not camera.artist">
+    <div class="row" tal:condition="not library.artist">
       <div class="small-12 columns">
         <div class="panel radius">
           <h6>Login</h6>
