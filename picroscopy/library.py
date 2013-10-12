@@ -17,20 +17,18 @@
 # picroscopy.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-This module defines the interface to the Picam. The main class is
-PicroscopyCamera which starts a preview session (using raspivid) upon
-instantiation. When the capture() method is called, the preview is stopped, an
-image is captured, and the preview is restarted. Users should call the close()
-method before finishing with PicroscopyCamera to ensure the preview session is
-closed.
+This module defines the library that stores pictures taken by the Pi's camera.
+The main class is :class:`PicroscopyLibrary` which encapsulates the camera
+object, and provides an iterable view of the pictures taken by the camera.
 
-The camera object also acts as an iterable. Iterating over the camera returns
-the filenames of the images that have been captured. Methods like stat_image(),
-open_image(), open_thumbnail() etc. can be called with these filenames to
-obtain information about the images, or the image data itself.
-
-Finally, convenience methods like send() and archive() are defined to automate
-transmission of the image library in various media.
+Methods are provided to :meth:`~PicroscopyLibrary.capture` images, to
+:meth:`~PicroscopyLibrary.clear` the library, and to
+:meth:`~PicroscopyLibrary.archive` or :meth:`~PicroscopyLibrary.send` the
+contents of the library. As suggested above, iterating over the library returns
+the filenames of the images that have been captured, while methods like
+:meth:`~PicroscopyLibrary.stat_image`, :meth:`~PicroscopyLibrary.open_image`,
+and :meth:`~PicroscopyLibrary.open_thumbnail` can be called with these
+filenames to obtain the metadata or data of the images.
 """
 
 import os
@@ -41,15 +39,17 @@ import datetime
 import tempfile
 import zipfile
 import smtplib
+import subprocess
+import json
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 
 from PIL import Image
-from picamera import PiCamera
 
 from picroscopy import __version__
 from picroscopy.exif import format_exif
+from picroscopy.camera import PicroscopyCamera
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -63,9 +63,18 @@ def ascii_property(value, name):
 
 
 class PicroscopyLibrary(object):
+
+    format_extensions = {
+        'jpeg': '.jpg',
+        'tiff': '.tiff',
+        'png':  '.png',
+        }
+
+    extensions = tuple(format_extensions.values())
+
     def __init__(self, **kwargs):
         super().__init__()
-        self.camera = PiCamera()
+        self.camera = PicroscopyCamera(**kwargs)
         self.images_tmp = tempfile.mkdtemp(dir=os.environ.get('TEMP', '/tmp'))
         self.thumbs_tmp = tempfile.mkdtemp(dir=os.environ.get('TEMP', '/tmp'))
         self.images_dir = os.path.abspath(os.path.normpath(kwargs.get(
@@ -107,16 +116,16 @@ class PicroscopyLibrary(object):
         os.rmdir(self.thumbs_tmp)
 
     def __len__(self):
-        return sum(1 for f in os.listdir(self.images_dir) if f.endswith('.jpg'))
+        return sum(1 for f in os.listdir(self.images_dir) if f.endswith(self.extensions))
 
     def __iter__(self):
         for f in sorted(os.listdir(self.images_dir)):
-            if f.endswith('.jpg'):
+            if f.endswith(self.extensions):
                 yield f
 
     def __contains__(self, value):
         return (
-            value.endswith('.jpg') and
+            value.endswith(self.extensions) and
             os.path.exists(os.path.join(self.images_dir, value))
             )
 
@@ -139,7 +148,8 @@ class PicroscopyLibrary(object):
         self.artist = ''
         self.copyright = ''
         self.email = ''
-        self.filename_template = 'pic-{date:%Y%m%d}-{counter:05d}.jpg'
+        self.format = 'jpeg'
+        self.filename_template = 'pic-{date:%Y%m%d}-{counter:05d}{ext}'
         self.counter = 1
 
     def _get_description(self):
@@ -188,7 +198,7 @@ class PicroscopyLibrary(object):
         return self._filename_template
     def _set_filename_template(self, value):
         try:
-            value.format(counter=1, date=datetime.datetime.now())
+            value.format(counter=1, date=datetime.datetime.now(), ext='.jpg')
         except KeyError as e:
             raise ValueError('Unknown value %s in template' % e)
         self._filename_template = value
@@ -197,10 +207,12 @@ class PicroscopyLibrary(object):
     def capture(self):
         # Safely allocate a new filename for the image
         date = datetime.datetime.now()
+        ext = self.format_extensions[self.format]
         while True:
             filename = os.path.join(
                 self.images_dir,
-                self.filename_template.format(date=date, counter=self.counter)
+                self.filename_template.format(
+                    date=date, counter=self.counter, ext=ext)
                 )
             try:
                 # XXX mode 'x' is only available in Py3.3+
@@ -210,7 +222,7 @@ class PicroscopyLibrary(object):
             else:
                 os.close(fd)
                 break
-        self.camera.capture(filename)
+        self.camera.capture(filename, self.format)
 
     def remove(self, image):
         try:
@@ -279,10 +291,13 @@ class PicroscopyLibrary(object):
         if not image in self:
             raise KeyError(image)
         image = os.path.join(self.images_dir, image)
-        im = Image.open(image)
-        result = format_exif(im._getexif())
-        result['Resolution'] = '%d x %d' % im.size
-        return result
+        p = subprocess.Popen(
+            ['exiftool', '-j', image],
+            stdin=None, stdout=subprocess.PIPE, stderr=None,
+            bufsize=-1)
+        out, err = p.communicate()
+        assert p.returncode == 0
+        return json.loads(out.decode('utf-8'))[0]
 
     def stat_thumbnail(self, image):
         if not image in self:
@@ -305,5 +320,5 @@ class PicroscopyLibrary(object):
                 ):
             im = Image.open(image)
             im.thumbnail(self.thumbs_size, Image.ANTIALIAS)
-            im.save(thumb, optimize=True, progressive=True)
+            im.save(thumb, format='JPEG', optimize=True, progressive=True)
 

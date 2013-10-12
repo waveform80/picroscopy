@@ -76,9 +76,54 @@ class WebHelpers(object):
     def image_exif(self, image):
         exif_data = self.library.open_image_exif(image)
         return sorted(
-            ((title, value) for (title, value) in exif_data.items()),
+            (
+                (self.format_title(title), value)
+                for (title, value) in self.library.open_image_exif(image).items()
+                if title not in set((
+                    'ApertureValue',
+                    'CreateDate',
+                    'ExifImageHeight',
+                    'ExifImageWidth',
+                    'ExifToolVersion',
+                    'FileModifyDate',
+                    'FileName',
+                    'FilePermissions',
+                    'Flash',
+                    'FlashFired',
+                    'FlashFunction',
+                    'FlashMode',
+                    'FlashRedEyeMode',
+                    'FlashReturn',
+                    'FocalLength35efl',
+                    'ImageHeight',
+                    'ImageWidth',
+                    'MakerNote',
+                    'MakerNoteUnknownText',
+                    'ModifyDate',
+                    'RowsPerStrip',
+                    'ResolutionUnit',
+                    'SourceFile',
+                    'StripByteCounts',
+                    'StripOffsets',
+                    'ThumbnailImage',
+                    'ThumbnailLength',
+                    'ThumbnailOffset',
+                    'XMPToolkit',
+                    'XResolution',
+                    'YResolution',
+                    ))
+                ),
             key=itemgetter(0)
             )
+
+    def format_title(self, title):
+        title = re.split(r'([A-Z][a-z][a-z])', title)
+        title = [
+            ''.join(title[max(0, i - 1):i + 1])
+            for i in range(0, len(title), 2)
+            ]
+        title = [s for s in title if s]
+        return ' '.join(title)
 
     def format_size(self, size, unit, precision=1, binary=False):
         prefixes = ('', 'k', 'M', 'G', 'T', 'P', 'E', 'Z')
@@ -230,7 +275,7 @@ class PicroscopyWsgiApp(object):
                     'Invalid %s: %s' % (setting, req.params[setting]))
         for setting in (
                 'artist', 'email', 'copyright', 'description',
-                'filename-template'):
+                'filename-template', 'format'):
             try:
                 setattr(
                     self.library, setting.replace('-', '_'),
@@ -301,7 +346,8 @@ class PicroscopyWsgiApp(object):
         if not image in self.library:
             self.not_found(req)
         resp = Response()
-        resp.content_type = 'image/jpeg'
+        resp.content_type, resp.content_encoding = mimetypes.guess_type(
+                image, strict=False)
         resp.content_length = self.library.stat_image(image).st_size
         resp.app_iter = FileWrapper(self.library.open_image(image))
         return resp

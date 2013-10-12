@@ -157,6 +157,19 @@
               </div>
             </div>
 
+            <div class="row advanced">
+              <div class="small-3 columns">
+                <label for="format" class="right inline">Image File Format</label>
+              </div>
+              <div class="small-9 columns">
+                <select required name="format" id="format">
+                  <option value="jpeg" tal:attributes="selected library.format=='jpeg'">JPEG (Lossy, compressed, metadata)</option>
+                  <option value="tiff" tal:attributes="selected library.format=='tiff'">TIFF (Lossless, uncompressed, metadata)</option>
+                  <option value="png" tal:attributes="selected library.format=='png'">PNG (Lossless, compressed, no metadata)</option>
+                </select>
+              </div>
+            </div>
+
             <div class="row">
               <div class="small-3 columns">
                 <label for="exposure-mode" class="right inline">Exposure Mode</label>
